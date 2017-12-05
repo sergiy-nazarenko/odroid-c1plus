@@ -16,6 +16,8 @@ tar xvfz avrdude-6.3.tar.gz
 
 cd avrdude-6.3
 
+**copy from here patched files**
+
 ./configure --enable-linuxgpio
 
 make
