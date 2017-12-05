@@ -1,5 +1,14 @@
 # odroid-c1plus
 ===================================
+
+Install WiringPi
+------------------
+git clone https://github.com/hardkernel/WiringPi
+
+cd WiringPi/
+
+./build
+
 ***
 Install arvdude
 ---------------------
