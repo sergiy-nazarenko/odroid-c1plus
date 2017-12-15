@@ -15,6 +15,8 @@ Install arvdude
 
 sudo apt-get install build-essential bison flex automake libelf-dev libusb-1.0.0-dev libusb-dev libftdi-dev libftdi1
 
+sudo apt-get install arduino
+
 mkdir avrdude
 
 cd arvdude/
@@ -33,3 +35,10 @@ make
 
 sudo make install
 
+
+
+***
+Links
+---------------------------------------
+
+https://github.com/garthvh/pitftmenu
