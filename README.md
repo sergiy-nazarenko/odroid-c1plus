@@ -56,7 +56,7 @@ https://www.youtube.com/watch?v=xEt6RGqBfX4&t=31s
 
 https://www.youtube.com/watch?v=yOIXnQCXnhg&feature=youtu.be
 
-
+https://forum.odroid.com/viewtopic.php?f=95&t=29308
 
 
 
