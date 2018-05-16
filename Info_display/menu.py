@@ -216,8 +216,8 @@ class Screen(object):
 
 
 # Outer Border
-pygame.draw.rect(screen, tron_regular, (0,0,479,319),8)
-pygame.draw.rect(screen, tron_light, (2,2,479-4,319-4),2)
+pygame.draw.rect(screen, tron_regular, (0,0,width-1,height-1),8)
+pygame.draw.rect(screen, tron_light, (2,2,width-5,height-5),2)
 
 pi_hostname = run_cmd("hostname")
 pi_hostname = "  " + pi_hostname[:-1]
