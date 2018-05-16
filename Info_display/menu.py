@@ -144,7 +144,7 @@ tron_inverse = tron_whi
 # Set up the base menu you can customize your menu with the colors above
 
 #set size of the screen
-size = width, height = 480, 320
+size = width, height = 800, 480
 screen = pygame.display.set_mode(size)
 
 
@@ -161,6 +161,9 @@ class Button(object):
         self.y += deltay
         self.h += deltay
         self.w += deltax
+
+    def click(self):
+        pass
 
     def __contains__(self, touch_pos):
         return (self.x <= touch_pos[0] <= 240 and self.y <= touch_pos[1] <=160)
@@ -182,6 +185,31 @@ class Screen(object):
     def render(self):
         for n in self._objects:
             n.render()
+
+    def on_touch(self, touch_pos):
+        # id = (touch_pos in a1) * 1 + \
+            # (touch_pos in a2) * 2 + \
+            # (touch_pos in a3) * 3 + \
+            # (touch_pos in a4) * 4 + 
+        #  x_min                 x_max   y_min                y_max
+        # button 1 event
+        if 30 <= touch_pos[0] <= 240 and 105 <= touch_pos[1] <=160:
+                button(1)
+        # button 2 event
+        if 260 <= touch_pos[0] <= 470 and 105 <= touch_pos[1] <=160:
+                button(2)
+        # button 3 event
+        if 30 <= touch_pos[0] <= 240 and 180 <= touch_pos[1] <=235:
+                button(3)
+        # button 4 event
+        if 260 <= touch_pos[0] <= 470 and 180 <= touch_pos[1] <=235:
+                button(4)
+        # button 5 event
+        if 30 <= touch_pos[0] <= 240 and 255 <= touch_pos[1] <=310:
+                button(5)
+        # button 6 event
+        if 260 <= touch_pos[0] <= 470 and 255 <= touch_pos[1] <=310:
+                button(6)
 
 
 # Background Color
@@ -219,21 +247,13 @@ s2.attach(a7)
 screens = [s1,s2]
 
 
-      
-
-# return (touch_pos in a1) * 1 + \
-# (touch_pos in a2) * 2 + \
-# (touch_pos in a3) * 3 + \
-# (touch_pos in a4) * 4 + 
-
-
 
 #While loop to manage touch screen inputs
 while 1:
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = (pygame.mouse.get_pos() [0], pygame.mouse.get_pos() [1])
-            on_touch()
+            screens[index.index()].on_touch(pos)
 
         #ensure there is always a safe way to end the program if the touch screen fails
         if event.type == KEYDOWN:
