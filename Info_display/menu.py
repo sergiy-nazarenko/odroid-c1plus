@@ -29,29 +29,6 @@ def make_label(text, xpo, ypo, fontsize, colour):
     label=font.render(str(text), 1, (colour))
     screen.blit(label,(xpo,ypo))
 
-# define function that checks for touch location
-def on_touch():
-    # get the position that was touched
-    touch_pos = (pygame.mouse.get_pos() [0], pygame.mouse.get_pos() [1])
-    #  x_min                 x_max   y_min                y_max
-    # button 1 event
-    if 30 <= touch_pos[0] <= 240 and 105 <= touch_pos[1] <=160:
-            button(1)
-    # button 2 event
-    if 260 <= touch_pos[0] <= 470 and 105 <= touch_pos[1] <=160:
-            button(2)
-    # button 3 event
-    if 30 <= touch_pos[0] <= 240 and 180 <= touch_pos[1] <=235:
-            button(3)
-    # button 4 event
-    if 260 <= touch_pos[0] <= 470 and 180 <= touch_pos[1] <=235:
-            button(4)
-    # button 5 event
-    if 30 <= touch_pos[0] <= 240 and 255 <= touch_pos[1] <=310:
-            button(5)
-    # button 6 event
-    if 260 <= touch_pos[0] <= 470 and 255 <= touch_pos[1] <=310:
-            button(6)
 
 def run_cmd(cmd):
     process = Popen(cmd.split(), stdout=PIPE)
@@ -97,11 +74,7 @@ def button(number):
 
     if number == 5:
         # next page
-        pygame.quit()
-        ##startx only works when we don't use subprocess here, don't know why
-        page=os.environ["MENUDIR"] + "menu_screenoff.py"
-        os.execvp("python", ["python", page])
-        sys.exit()
+        index.setIndex(1)
 
     if number == 6:
         # next page
@@ -226,20 +199,16 @@ pi_hostname = "  " + pi_hostname[:-1]
 make_label(pi_hostname, 32, 30, 48, tron_inverse)
 # Second Row buttons 3 and 4
 a1 = Button("    X on TFT", (30, 105, 55, 210))
-a2 = Button("   X on HDMI", (260, 105, 55, 210))
 # Third Row buttons 5 and 6
 a3 = Button("    Terminal", (30, 180, 55, 210))
-a4 = Button("        hTop", (260, 180, 55, 210))
 # Fourth Row Buttons
 a5 = Button("          <<<", (30, 255, 55, 210))
-a6 = Button("          >>>", (260, 255, 55, 210))
 
 a7 = Button("         Koko", (30, 105, 55, 210))
 
 
-
 s1 = Screen()
-s1.attach(a1,a2,a3,a4,a5,a6)
+s1.attach(a1,a3,a5)
 
 s2 = Screen()
 s2.attach(a7)
