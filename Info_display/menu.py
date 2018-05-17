@@ -25,15 +25,6 @@ pygame.display.init()
 clock = pygame.time.Clock()
 pygame.mouse.set_visible(0)
 
-# define function for printing text in a specific place with a specific width and height with a specific colour and border
-def make_button(text, xpo, ypo, height, width, colour):
-    pygame.draw.rect(screen, tron_regular, (xpo-10,ypo-10,width,height),3)
-    pygame.draw.rect(screen, tron_light, (xpo-9,ypo-9,width-1,height-1),1)
-    pygame.draw.rect(screen, tron_regular, (xpo-8,ypo-8,width-2,height-2),1)
-    font=pygame.font.Font(None,42)
-    label=font.render(str(text), 1, (colour))
-    screen.blit(label,(xpo,ypo))
-
 
 
 def run_cmd(cmd):
@@ -115,7 +106,6 @@ class Button(object):
         self.x_min, self.x_max, self.y_min, self.y_max = self.x, self.x + self.w, self.y, self.y + self.h
         
     def render(self, inverse_color=0):
-        #make_button(self._label, self.x, self.y, self.h, self.w, self._colors[inverse_color])
         pygame.draw.rect(screen, tron_regular, (self.x-10,self.y-10,self.w,self.h),3)
         pygame.draw.rect(screen, tron_light, (self.x-9,self.y-9,self.w-1,self.h-1),1)
         pygame.draw.rect(screen, tron_regular, (self.x-8,self.y-8,self.w-2,self.h-2),1)
