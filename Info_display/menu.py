@@ -5,6 +5,10 @@ import os
 import time
 import subprocess
 import commands
+from time import gmtime, strftime
+
+sys.path.append(os.environ.get('MENUDIR'))
+import vectra_gui
 
 import pygame
 from pygame.locals import *
@@ -14,11 +18,12 @@ os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
 os.environ["SDL_MOUSEDRV"] = "TSLIB"
 
 # Initialize pygame modules individually (to avoid ALSA errors) and hide mouse
-pygame.init()
+#pygame.init()
 pygame.font.init()
 pygame.display.init()
 
-# pygame.mouse.set_visible(0)
+clock = pygame.time.Clock()
+pygame.mouse.set_visible(0)
 
 # define function for printing text in a specific place with a specific width and height with a specific colour and border
 def make_button(text, xpo, ypo, height, width, colour):
@@ -34,6 +39,7 @@ def make_button(text, xpo, ypo, height, width, colour):
 def make_label(text, xpo, ypo, fontsize, colour):
     font=pygame.font.Font(None,fontsize)
     label=font.render(str(text), 1, (colour))
+    pygame.draw.rect(screen, black, (xpo,ypo,label.get_width(),label.get_height()),0)
     screen.blit(label,(xpo,ypo))
 
 
@@ -49,10 +55,6 @@ class GlobalIndex(object):
     def index(self):
         return self._index
 
-index = GlobalIndex()  
-
-
-
 
 
 # colors    R    G    B
@@ -66,7 +68,7 @@ black    = (  0,   0,   0)
 cyan     = ( 50, 255, 255)
 magenta  = (255,   0, 255)
 yellow   = (255, 255,   0)
-tron_yel = (255, 218,  10)
+tron_yel = (255,  50,  10)
 orange   = (255, 127,   0)
 tron_ora = (255, 202,   0)
 
@@ -81,14 +83,37 @@ size = width, height = 800, 480
 screen = pygame.display.set_mode(size)
 
 
+
+class Label(object):
+    def __init__(self, pos, fontsize, colors=(tron_light, black)):
+        self._colors = colors
+        self.x, self.y = pos
+        self._fontsize = fontsize
+
+    def render(self, inverse_color=0):
+        font=pygame.font.Font(None,self._fontsize)
+        label=font.render(str(self.get_text()), 1, (self._colors[inverse_color]))
+        background = int(not bool(inverse_color)) 
+        pygame.draw.rect(screen, self._colors[background], (self.x,self.y,label.get_width(),label.get_height()),0)
+        screen.blit(label,(self.x,self.y))
+    
+    def get_text(self):
+        return ''
+    
+    def __contains__(self, a):
+        return False
+
+
+
 class Button(object):
-    def __init__(self, label, rect, touch_rect):
+    def __init__(self, label, rect, colors=(tron_light, tron_inverse)):
         self._label = label
+        self._colors = colors
         self.x, self.y, self.h, self.w = rect
-        self.x_min, self.x_max, self.y_min, self.y_max = touch_rect
+        self.x_min, self.x_max, self.y_min, self.y_max = self.x, self.x + self.w, self.y, self.y + self.h
         
-    def render(self):
-        make_button(self._label, self.x, self.y, self.h, self.w, tron_light)
+    def render(self, inverse_color=0):
+        make_button(self._label, self.x, self.y, self.h, self.w, self._colors[inverse_color])
 
     def move(self, deltax, deltay):
         self.x += deltax
@@ -101,7 +126,7 @@ class Button(object):
 
     def __contains__(self, touch_pos):
         return (self.x_min <= touch_pos[0] <= self.x_max and self.y_min <= touch_pos[1] <= self.y_max)
-        # if 30 <= touch_pos[0] <= 240 and 105 <= touch_pos[1] <=160:
+
 
 
 class Screen(object):
@@ -116,9 +141,9 @@ class Screen(object):
         for n in self._objects:
             n.move(deltax, deltay)
 
-    def render(self):
+    def render(self,v):
         for n in self._objects:
-            n.render()
+            n.render(v)
 
     def on_touch(self, touch_pos):
         for n in self._objects: 
@@ -127,33 +152,34 @@ class Screen(object):
                 return
 
 
+index = GlobalIndex()  
 
 # Outer Border
 pygame.draw.rect(screen, tron_regular, (0,0,width-1,height-1),8)
 pygame.draw.rect(screen, tron_light, (2,2,width-5,height-5),2)
 
-pi_hostname = run_cmd("hostname")
-pi_hostname = "  " + pi_hostname[:-1]
-# Buttons and labels
-# First Row Label
-make_label(pi_hostname, 32, 30, 48, tron_inverse)
 # Second Row buttons 3 and 4
-a1 = Button("    X on TFT", (30, 105, 55, 210),  (30, 240, 105,160))
+a1 = Button("    Reset UI", (30, 105, 55, 210))
 # Third Row buttons 5 and 6
-a3 = Button("    Terminal", (30, 180, 55, 210), (30, 240, 180, 235))
+a3 = Button("    Terminal", (30, 180, 55, 210))
 # Fourth Row Buttons
-a5 = Button("          <<<", (30, 255, 55, 210), (30, 240, 255, 310))
+a5 = Button("  <<<", (30, 255, 55, 110))
 
-a7 = Button("         Koko", (30, 105, 55, 210),  (30, 240, 105,160))
-
+a7 = Button("     >>>", (30, 105, 55, 210))
+a8 = Button("     Shutdown", (30, 180, 55, 210))
 
 
 # Define each button press action
 def button1(self):
-    pygame.quit()
+    #pygame.quit()
     ## Requires "Anybody" in dpkg-reconfigure x11-common if we have scrolled pages previously
-    run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb1 startx")
-    os.execv(__file__, sys.argv)        
+    #run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb1 startx")
+    pygame.quit()
+    ##startx only works when we don't use subprocess here, don't know why
+    page=os.environ["MENUDIR"] + "menu_kali-2.py"
+    os.execvp("python", ["python", page])
+    sys.exit()
+    #os.execv(__file__, sys.argv)        
 
 
 def button3(self):
@@ -168,24 +194,42 @@ def button5(self):
 def button7(self):
     index.setIndex(0)
     
+def button8():
+     command = "/usr/bin/sudo /sbin/shutdown -h now"
+     process = Popen(command.split(), stdout=PIPE)
+     output = process.communicate()[0]
+     return output
+
 
 a1.click = types.MethodType(button1, a1)
 a3.click = types.MethodType(button3, a3)
 a5.click = types.MethodType(button5, a5)
 a7.click = types.MethodType(button7, a7)
+a8.click = types.MethodType(button8, a8)
+
+l1 = Label((32,30), 48)
+
+def get_text1(self):
+    return strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
+
+l1.get_text = types.MethodType(get_text1, l1)
+
 
 s1 = Screen()
-s1.attach(a1,a3,a5)
+s1.attach(l1,a1,a3,a5)
 
 s2 = Screen()
-s2.attach(a7)
+s2.attach(a7,a8)
 
 screens = [s1,s2]
 
-
+background = (black, tron_light)
+color_index = 1 
 
 #While loop to manage touch screen inputs
 while 1:
+    can_data = vectra_gui.array_read_can()
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = (pygame.mouse.get_pos() [0], pygame.mouse.get_pos() [1])
@@ -195,9 +239,13 @@ while 1:
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 sys.exit()
-    screen.fill(black)
-    screens[index.index()].render()
+    color_index = can_data[0]
+    
+    screens[index.index()].render(color_index)
+    make_label('CAN: %s' % can_data[:3], 450, 30, 38, tron_inverse)
     pygame.display.update()
-    pygame.display.flip()
-    ## Reduce CPU utilisation
-    time.sleep(0.1)
+
+    screen.fill( background[color_index] )
+    clock.tick(24)
+
+
