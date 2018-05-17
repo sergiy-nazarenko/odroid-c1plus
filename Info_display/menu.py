@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-import sys, os, time, subprocess, commands, pygame
+import types
+import sys
+import os
+import time
+import subprocess
+import commands
+
+import pygame
 from pygame.locals import *
 from subprocess import *
 os.environ["SDL_FBDEV"] = "/dev/fb1"
@@ -114,7 +121,6 @@ class Screen(object):
             n.render()
 
     def on_touch(self, touch_pos):
-
         for n in self._objects: 
             if touch_pos in n:
                 n.click()
@@ -161,10 +167,10 @@ def button7(self):
     index.setIndex(0)
     
 
-a1.click = button1
-a3.click = button3
-a5.click = button5
-a7.click = button7
+a1.click = types.MethodType(button1, a1)
+a3.click = types.MethodType(button3, a3)
+a5.click = types.MethodType(button5, a5)
+a7.click = types.MethodType(button7, a7)
 
 s1 = Screen()
 s1.attach(a1,a3,a5)
