@@ -155,9 +155,11 @@ def button1(self):
     run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb1 startx")
     os.execv(__file__, sys.argv)        
 
+
 def button3(self):
     pygame.quit()
     sys.exit()
+
 
 def button5(self):
     index.setIndex(1)
