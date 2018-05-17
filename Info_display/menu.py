@@ -35,13 +35,6 @@ def make_button(text, xpo, ypo, height, width, colour):
     screen.blit(label,(xpo,ypo))
 
 
-# define function for printing text in a specific place with a specific colour
-def make_label(text, xpo, ypo, fontsize, colour):
-    font=pygame.font.Font(None,fontsize)
-    label=font.render(str(text), 1, (colour))
-    pygame.draw.rect(screen, black, (xpo,ypo,label.get_width(),label.get_height()),0)
-    screen.blit(label,(xpo,ypo))
-
 
 def run_cmd(cmd):
     process = Popen(cmd.split(), stdout=PIPE)
@@ -55,7 +48,14 @@ class GlobalIndex(object):
     def index(self):
         return self._index
 
-
+class GlobalCan(object):
+    _data = []
+    def refresh(self):
+        self._data = vectra_gui.array_read_can()
+    
+    def getData(self):
+        return self._data
+        
 
 # colors    R    G    B
 white    = (255, 255, 255)
@@ -81,6 +81,8 @@ tron_inverse = tron_whi
 #set size of the screen
 size = width, height = 800, 480
 screen = pygame.display.set_mode(size)
+
+globalcan = GlobalCan()
 
 
 
@@ -113,7 +115,13 @@ class Button(object):
         self.x_min, self.x_max, self.y_min, self.y_max = self.x, self.x + self.w, self.y, self.y + self.h
         
     def render(self, inverse_color=0):
-        make_button(self._label, self.x, self.y, self.h, self.w, self._colors[inverse_color])
+        #make_button(self._label, self.x, self.y, self.h, self.w, self._colors[inverse_color])
+        pygame.draw.rect(screen, tron_regular, (self.x-10,self.y-10,self.w,self.h),3)
+        pygame.draw.rect(screen, tron_light, (self.x-9,self.y-9,self.w-1,self.h-1),1)
+        pygame.draw.rect(screen, tron_regular, (self.x-8,self.y-8,self.w-2,self.h-2),1)
+        font=pygame.font.Font(None,42)
+        label=font.render(str(self._label), 1, (self._colors[inverse_color]))
+        screen.blit(label,(self.x,self.y))
 
     def move(self, deltax, deltay):
         self.x += deltax
@@ -171,15 +179,10 @@ a8 = Button("     Shutdown", (30, 180, 55, 210))
 
 # Define each button press action
 def button1(self):
-    #pygame.quit()
-    ## Requires "Anybody" in dpkg-reconfigure x11-common if we have scrolled pages previously
-    #run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb1 startx")
     pygame.quit()
-    ##startx only works when we don't use subprocess here, don't know why
-    page=os.environ["MENUDIR"] + "menu_kali-2.py"
+    page=os.environ["MENUDIR"] + "menu.py"
     os.execvp("python", ["python", page])
     sys.exit()
-    #os.execv(__file__, sys.argv)        
 
 
 def button3(self):
@@ -194,6 +197,7 @@ def button5(self):
 def button7(self):
     index.setIndex(0)
     
+
 def button8():
      command = "/usr/bin/sudo /sbin/shutdown -h now"
      process = Popen(command.split(), stdout=PIPE)
@@ -208,19 +212,23 @@ a7.click = types.MethodType(button7, a7)
 a8.click = types.MethodType(button8, a8)
 
 l1 = Label((32,30), 48)
+l2 = Label((300,30), 30)
 
 def get_text1(self):
     return strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
 
-l1.get_text = types.MethodType(get_text1, l1)
+def get_text2(self):
+    return 'CAN: %s' % globalcan.getData()[:3]
 
+l1.get_text = types.MethodType(get_text1, l1)
+l2.get_text = types.MethodType(get_text2, l2)
 
 s1 = Screen()
 s1.attach(l1,a1,a3,a5)
 
 s2 = Screen()
-s2.attach(a7,a8)
+s2.attach(l2,a7,a8)
 
 screens = [s1,s2]
 
@@ -229,7 +237,8 @@ color_index = 1
 
 #While loop to manage touch screen inputs
 while 1:
-    can_data = vectra_gui.array_read_can()
+    globalcan.refresh()
+    can_data = globalcan.getData()
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
             pos = (pygame.mouse.get_pos() [0], pygame.mouse.get_pos() [1])
@@ -239,10 +248,10 @@ while 1:
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 sys.exit()
+
     color_index = can_data[0]
     
     screens[index.index()].render(color_index)
-    make_label('CAN: %s' % can_data[:3], 450, 30, 38, tron_inverse)
     pygame.display.update()
 
     screen.fill( background[color_index] )
