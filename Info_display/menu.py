@@ -44,48 +44,7 @@ class GlobalIndex(object):
 
 index = GlobalIndex()  
 
-# Define each button press action
-def button(number):
-    if number == 1:
-        # X TFT
-        pygame.quit()
-        ## Requires "Anybody" in dpkg-reconfigure x11-common if we have scrolled pages previously
-        run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb1 startx")
-        os.execv(__file__, sys.argv)        
 
-    if number == 2:
-        # X HDMI
-        pygame.quit()
-        ## Requires "Anybody" in dpkg-reconfigure x11-common if we have scrolled pages previously
-        run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb0 startx")
-        os.execv(__file__, sys.argv)        
-
-
-    if number == 3:
-        # exit
-        pygame.quit()
-        sys.exit()
-
-    if number == 4:
-        # htop
-        pygame.quit()
-        process = subprocess.call("/usr/bin/htop", shell=True)
-        os.execv(__file__, sys.argv)        
-
-    if number == 5:
-        # next page
-        index.setIndex(1)
-
-    if number == 6:
-        # next page
-        # screen.blit(bif,(0-20,0))
-        # s1.move(-20,0)
-        index.setIndex(1)
-        #pygame.quit()
-        # ##startx only works when we don't use subprocess here, don't know why
-        # page=os.environ["MENUDIR"] + "menu_kali-2.py"
-        # os.execvp("python", ["python", page])
-        # sys.exit()
 
 
 
@@ -109,12 +68,6 @@ tron_regular = tron_ora
 tron_light   = tron_yel
 tron_inverse = tron_whi
 
-# Tron theme blue
-##tron_regular = tron_blu
-##tron_light   = tron_whi
-##tron_inverse = tron_yel 
-
-# Set up the base menu you can customize your menu with the colors above
 
 #set size of the screen
 size = width, height = 800, 480
@@ -122,9 +75,10 @@ screen = pygame.display.set_mode(size)
 
 
 class Button(object):
-    def __init__(self, label, rect):
+    def __init__(self, label, rect, touch_rect):
         self._label = label
         self.x, self.y, self.h, self.w = rect
+        self.x_min, self.x_max, self.y_min, self.y_max = touch_rect
         
     def render(self):
         make_button(self._label, self.x, self.y, self.h, self.w, tron_light)
@@ -139,7 +93,7 @@ class Button(object):
         pass
 
     def __contains__(self, touch_pos):
-        return (self.x <= touch_pos[0] <= 240 and self.y <= touch_pos[1] <=160)
+        return (self.x_min <= touch_pos[0] <= self.x_max and self.y_min <= touch_pos[1] <= self.y_max)
         # if 30 <= touch_pos[0] <= 240 and 105 <= touch_pos[1] <=160:
 
 
@@ -160,32 +114,12 @@ class Screen(object):
             n.render()
 
     def on_touch(self, touch_pos):
-        # id = (touch_pos in a1) * 1 + \
-            # (touch_pos in a2) * 2 + \
-            # (touch_pos in a3) * 3 + \
-            # (touch_pos in a4) * 4 + 
-        #  x_min                 x_max   y_min                y_max
-        # button 1 event
-        if 30 <= touch_pos[0] <= 240 and 105 <= touch_pos[1] <=160:
-                button(1)
-        # button 2 event
-        if 260 <= touch_pos[0] <= 470 and 105 <= touch_pos[1] <=160:
-                button(2)
-        # button 3 event
-        if 30 <= touch_pos[0] <= 240 and 180 <= touch_pos[1] <=235:
-                button(3)
-        # button 4 event
-        if 260 <= touch_pos[0] <= 470 and 180 <= touch_pos[1] <=235:
-                button(4)
-        # button 5 event
-        if 30 <= touch_pos[0] <= 240 and 255 <= touch_pos[1] <=310:
-                button(5)
-        # button 6 event
-        if 260 <= touch_pos[0] <= 470 and 255 <= touch_pos[1] <=310:
-                button(6)
 
+        for n in self._objects: 
+            if touch_pos in n:
+                n.click()
+                return
 
-# Background Color
 
 
 # Outer Border
@@ -198,14 +132,39 @@ pi_hostname = "  " + pi_hostname[:-1]
 # First Row Label
 make_label(pi_hostname, 32, 30, 48, tron_inverse)
 # Second Row buttons 3 and 4
-a1 = Button("    X on TFT", (30, 105, 55, 210))
+a1 = Button("    X on TFT", (30, 105, 55, 210),  (30, 240, 105,160))
 # Third Row buttons 5 and 6
-a3 = Button("    Terminal", (30, 180, 55, 210))
+a3 = Button("    Terminal", (30, 180, 55, 210), (30, 240, 180, 235))
 # Fourth Row Buttons
-a5 = Button("          <<<", (30, 255, 55, 210))
+a5 = Button("          <<<", (30, 255, 55, 210), (30, 240, 255, 310))
 
-a7 = Button("         Koko", (30, 105, 55, 210))
+a7 = Button("         Koko", (30, 105, 55, 210),  (30, 240, 105,160))
 
+
+
+# Define each button press action
+def button1(self):
+    pygame.quit()
+    ## Requires "Anybody" in dpkg-reconfigure x11-common if we have scrolled pages previously
+    run_cmd("/usr/bin/sudo -u pi FRAMEBUFFER=/dev/fb1 startx")
+    os.execv(__file__, sys.argv)        
+
+def button3(self):
+    pygame.quit()
+    sys.exit()
+
+def button5(self):
+    index.setIndex(1)
+
+
+def button7(self):
+    index.setIndex(0)
+    
+
+a1.click = button1
+a3.click = button3
+a5.click = button5
+a7.click = button7
 
 s1 = Screen()
 s1.attach(a1,a3,a5)
