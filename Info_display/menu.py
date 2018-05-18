@@ -53,8 +53,6 @@ index = GlobalIndex()
 
 
 
-
-
 # colors    R    G    B
 white    = (255, 255, 255)
 tron_whi = (189, 254, 255)
@@ -81,6 +79,7 @@ size = width, height = 800, 480
 screen = pygame.display.set_mode(size)
 
 
+
 class Button(object):
     def __init__(self, label, rect, touch_rect):
         self._label = label
@@ -101,7 +100,7 @@ class Button(object):
 
     def __contains__(self, touch_pos):
         return (self.x_min <= touch_pos[0] <= self.x_max and self.y_min <= touch_pos[1] <= self.y_max)
-        # if 30 <= touch_pos[0] <= 240 and 105 <= touch_pos[1] <=160:
+
 
 
 class Screen(object):
@@ -129,8 +128,8 @@ class Screen(object):
 
 
 # Outer Border
-pygame.draw.rect(screen, tron_regular, (0,0,width-1,height-1),8)
-pygame.draw.rect(screen, tron_light, (2,2,width-5,height-5),2)
+# pygame.draw.rect(screen, tron_regular, (0,0,width-1,height-1),8)
+# pygame.draw.rect(screen, tron_light, (2,2,width-5,height-5),2)
 
 pi_hostname = run_cmd("hostname")
 pi_hostname = "  " + pi_hostname[:-1]
@@ -138,13 +137,13 @@ pi_hostname = "  " + pi_hostname[:-1]
 # First Row Label
 make_label(pi_hostname, 32, 30, 48, tron_inverse)
 # Second Row buttons 3 and 4
-a1 = Button("    X on TFT", (30, 105, 55, 210),  (30, 240, 105,160))
+a1 = Button("    X on TFT", (30, 105, 55, 210),  (30, 240, 105, 160))
 # Third Row buttons 5 and 6
 a3 = Button("    Terminal", (30, 180, 55, 210), (30, 240, 180, 235))
 # Fourth Row Buttons
 a5 = Button("          <<<", (30, 255, 55, 210), (30, 240, 255, 310))
 
-a7 = Button("         Koko", (30, 105, 55, 210),  (30, 240, 105,160))
+a7 = Button("         Koko", (30, 105, 55, 210),  (30, 240, 105, 160))
 
 
 
