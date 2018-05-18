@@ -35,6 +35,42 @@ def run_cmd(cmd):
     return output
 
 
+"""
+https://askubuntu.com/questions/804610/how-to-have-my-bash-script-executed-every-time-the-touch-screen-receives-input
+#!/bin/bash
+
+how_many_touches=10
+
+touch_detected=0
+while [ "$touch_detected" -lt "$how_many_touches" ]; do
+timeout 0.1s evtest /dev/input/event7 > touchscreen_log.txt
+
+grep "type 1 (EV_KEY), code 330 (BTN_TOUCH)" touchscreen_log.txt &>/dev/null
+    if [[ $? != 0 ]]; then &>/dev/null
+        echo 'No touch detected' &>/dev/null
+    else touch_detected=$[$touch_detected+1] &>/dev/null
+        bash quit_poking_me.sh &>/dev/null
+        sleep 1
+    fi
+    echo $touch_detected &>/dev/null
+done
+"""
+
+
+def myrun(cmd):
+    """from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
+    """
+    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    stdout = []
+    while True:
+        line = p.stdout.readline()
+        stdout.append(line)
+        print line,
+        if line == '' and p.poll() != None:
+            break
+    return ''.join(stdout)
+
+
 
 class GlobalIndex(object):
     _index = 0
