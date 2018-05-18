@@ -38,7 +38,7 @@ def run_cmd(cmd):
 """
 https://askubuntu.com/questions/804610/how-to-have-my-bash-script-executed-every-time-the-touch-screen-receives-input
 #!/bin/bash
-
+https://stackoverflow.com/questions/28841139/how-to-get-coordinates-of-touchscreen-rawdata-using-linux
 how_many_touches=10
 
 touch_detected=0
