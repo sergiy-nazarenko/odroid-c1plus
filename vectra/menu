@@ -1,0 +1,15 @@
+#!/bin/bash
+##############################################
+##                                          ##
+##  Menu                                    ##
+##  Best autostarted through ~/.profile     ##
+##                                          ##
+##############################################
+
+
+export FRAMEBUFFER=/dev/fb1
+export MENUDIR="/home/odroid/workspace/vectra/"
+startpage="menu.py"
+/usr/bin/clear
+
+/usr/bin/env python $MENUDIR$startpage
