@@ -242,14 +242,14 @@ def button7(self):
     index.setIndex(0)
     
 
-def button8():
+def button8(self):
      command = "/usr/bin/sudo /sbin/shutdown -h now"
      process = Popen(command.split(), stdout=PIPE)
      output = process.communicate()[0]
      return output
 
 
-def button9():
+def button9(self):
      command = "/usr/bin/sudo /sbin/shutdown -r now"
      process = Popen(command.split(), stdout=PIPE)
      output = process.communicate()[0]
