@@ -67,26 +67,25 @@ pipe_str_write (const std::string& pipename
     sem_t *sem;
 
     if ( (sem = sem_open(semaphorename, O_CREAT, 0644, 1)) == SEM_FAILED ) {
-        perror("sem_open");
+        //perror("sem_open");
         return 1;
     }
     sem_wait(sem);
 
     if ( (shm = shm_open(pipename.c_str(), mode|O_RDWR, 0777)) == -1 ) {
-        perror("shm_open");
+        //perror("shm_open");
         return 1;
     }
 
     if ( ftruncate(shm, size+1) == -1 ) {
-        perror("ftruncate");
+        //perror("ftruncate");
         return 1;
     }
 
     addr = (char*)mmap(0, size+1, PROT_WRITE|PROT_READ, MAP_SHARED, shm, 0);
     if ( addr == (char*)-1 ) {
-        perror("mmap");
+        //perror("mmap");
         close(shm);
-
         return 1;
     }
     
@@ -96,13 +95,16 @@ pipe_str_write (const std::string& pipename
     munmap(addr, size);
     close(shm);
 
+    int ret = 0;
     if ( sem_post(sem) < 0 )
-        perror("sem_post");
+        ret = -1;
+        //perror("sem_post");
 
     if ( sem_close(sem) < 0 )
-        perror("sem_close");
+        ret = -1;
+        //perror("sem_close");
     
-    return 0;
+    return ret;
 }
 
 
@@ -115,7 +117,7 @@ pipe_arr_write (const std::string& pipename
     sem_t *sem;
 
     if ( (sem = sem_open(semaforename, O_CREAT, 0644, 1)) == SEM_FAILED ) {
-        perror("sem_open");
+        //perror("sem_open");
         return 1;
     }
     sem_wait(sem);
@@ -135,14 +137,14 @@ pipe_arr_write (const std::string& pipename
     }
 
     if ( ftruncate(shm, size+1) == -1 ) {
-        perror("ftruncate");
+        //perror("ftruncate");
         sem_post(sem);
         return 1;
     }
 
     addr = (int*)mmap(0, size+1, PROT_WRITE|PROT_READ, MAP_SHARED, shm, 0);
     if ( addr == (int*)-1 ) {
-        perror("mmap");
+        //perror("mmap");
         sem_post(sem);
         return 1;
     }
@@ -156,10 +158,10 @@ pipe_arr_write (const std::string& pipename
     close(shm);
     
     if ( sem_post(sem) < 0 )
-        perror("sem_post");
+        //perror("sem_post");
 
     if ( sem_close(sem) < 0 )
-        perror("sem_close");
+        //perror("sem_close");
     
     return 0;
 }
@@ -179,20 +181,20 @@ pipe_arr_read(std::vector<int>& ret
     sem_t *sem;
     
     if ( (sem = sem_open(semaphorename, O_CREAT, 0644, 1)) == SEM_FAILED ) {
-        perror("sem_open");
+        //perror("sem_open");
         return 1;
     }
     sem_wait(sem);
 
     if ( (shm = shm_open(pipename.c_str(), mode|O_RDWR, 0777)) == -1 ) {
-        perror("shm_open");
+        //perror("shm_open");
         sem_post(sem);
         return -1;
     }
 
     addr = (int *)mmap(0, size+1, PROT_WRITE|PROT_READ, MAP_SHARED, shm, 0);
     if ( addr == (int*)-1 ) {
-        perror("mmap");
+        //perror("mmap");
         sem_post(sem);
         return -2;
     }
@@ -204,10 +206,10 @@ pipe_arr_read(std::vector<int>& ret
     close(shm);
     
     if ( sem_post(sem) < 0 )
-        perror("sem_post");
+        //perror("sem_post");
 
     if ( sem_close(sem) < 0 )
-        perror("sem_close");
+        //perror("sem_close");
 
     return 0;
 }
@@ -224,20 +226,20 @@ pipe_str_read(std::string& ret
     sem_t *sem;
     
     if ( (sem = sem_open(semaphorename, O_CREAT, 0644, 1)) == SEM_FAILED ) {
-        perror("sem_open");
+        //perror("sem_open");
         return 1;
     }
     sem_wait(sem);
 
 
     if ( (shm = shm_open(pipename.c_str(), mode|O_RDWR, 0777)) == -1 ) {
-        perror("shm_open");
+        //perror("shm_open");
         return -1;
     }
 
     addr = (char *)mmap(0, size+1, PROT_WRITE|PROT_READ, MAP_SHARED, shm, 0);
     if ( addr == (char*)-1 ) {
-        perror("mmap");
+        //perror("mmap");
         return -1;
     }
 
@@ -245,12 +247,14 @@ pipe_str_read(std::string& ret
     munmap(addr, size);
     close(shm);
 
-
+    int retval = 0;
     if ( sem_post(sem) < 0 )
-        perror("sem_post");
+        retval = -1;
+        //perror("sem_post");
 
     if ( sem_close(sem) < 0 )
-        perror("sem_close");
+        retval = -1;
+        //perror("sem_close");
     
-    return 0;
+    return retval;
 }

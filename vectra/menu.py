@@ -6,18 +6,20 @@ import time
 import subprocess
 from subprocess import *
 import commands
-from time import gmtime, strftime
-
-sys.path.append(os.environ.get('MENUDIR'))
+from time import strftime, localtime 
+MENUDIR = os.environ.get('MENUDIR')
+sys.path.append(MENUDIR)
 import vectra_gui
 
 import pygame
 from pygame.locals import *
 
-CMDDUMPH='/home/odroid/workspace/vectra/dump_hex.sh'
-CMDDUMPL='/home/odroid/workspace/vectra/dump_log.sh'
-CMDSNIFB='/home/odroid/workspace/vectra/sniffer_binary.sh'
-CMDSNIFH='/home/odroid/workspace/vectra/sniffer_hex.sh'
+
+CMDDUMPH = MENUDIR + os.sep + 'dump_hex.sh'
+CMDDUMPL = MENUDIR + os.sep + 'dump_log.sh'
+CMDSNIFB = MENUDIR + os.sep + 'sniffer_binary.sh'
+CMDSNIFH = MENUDIR + os.sep + 'sniffer_hex.sh'
+CMDPLAYV = MENUDIR + os.sep + 'play_vcan.sh'
 
 os.environ["SDL_FBDEV"] = "/dev/fb1"
 os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
@@ -37,42 +39,6 @@ def run_cmd(cmd):
     process = Popen(cmd.split(), stdout=PIPE)
     output = process.communicate()[0]
     return output
-
-
-"""
-https://askubuntu.com/questions/804610/how-to-have-my-bash-script-executed-every-time-the-touch-screen-receives-input
-#!/bin/bash
-
-how_many_touches=10
-
-touch_detected=0
-while [ "$touch_detected" -lt "$how_many_touches" ]; do
-timeout 0.1s evtest /dev/input/event7 > touchscreen_log.txt
-
-grep "type 1 (EV_KEY), code 330 (BTN_TOUCH)" touchscreen_log.txt &>/dev/null
-    if [[ $? != 0 ]]; then &>/dev/null
-        echo 'No touch detected' &>/dev/null
-    else touch_detected=$[$touch_detected+1] &>/dev/null
-        bash quit_poking_me.sh &>/dev/null
-        sleep 1
-    fi
-    echo $touch_detected &>/dev/null
-done
-"""
-
-
-def myrun(cmd):
-    """from http://blog.kagesenshi.org/2008/02/teeing-python-subprocesspopen-output.html
-    """
-    p = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = []
-    while True:
-        line = p.stdout.readline()
-        stdout.append(line)
-        print line,
-        if line == '' and p.poll() != None:
-            break
-    return ''.join(stdout)
 
 
 
@@ -106,7 +72,7 @@ black    = (  0,   0,   0)
 cyan     = ( 50, 255, 255)
 magenta  = (255,   0, 255)
 yellow   = (255, 255,   0)
-tron_yel = (255, 190, 110)
+tron_yel = (255, 140, 0)
 orange   = (255, 127,   0)
 tron_ora = (255, 202,   0)
 
@@ -157,9 +123,7 @@ class Button(object):
 
 
     def render(self, inverse_color=0):
-        pygame.draw.rect(screen, tron_regular, (self.x-10,self.y-10,self.w,self.h),3)
-        pygame.draw.rect(screen, tron_light, (self.x-9,self.y-9,self.w-1,self.h-1),1)
-        pygame.draw.rect(screen, tron_regular, (self.x-8,self.y-8,self.w-2,self.h-2),1)
+        pygame.draw.rect(screen, self._colors[inverse_color], (self.x-9,self.y-8,self.w-1,self.h+1),5)
         font=pygame.font.Font(None,42)
         label=font.render(str(self._label), 1, (self._colors[inverse_color]))
         screen.blit(label,(self.x,self.y))
@@ -224,8 +188,9 @@ a42= Button(" Dump hex ", (30, 310, 45, 170))
 a5 = Button("  <<<", (30, 385, 55, 110))
 
 a7 = Button("  >>>", (30, 385, 55, 110))
-a8 = Button(" Shutdown", (30, 180, 55, 170))
-a9 = Button("   Reboot", (30, 255, 55, 170))
+a8 = Button(" Shutdown", (30, 130, 45, 170))
+a9 = Button("   Reboot", (30, 190, 45, 170))
+a10 = Button("Play VCAN", (30, 250, 45, 170))
 
 
 # Define each button press action
@@ -241,20 +206,24 @@ def button3_snifb(self):
     run_cmd(CMDSNIFB)
     os.execv(__file__, sys.argv)
 
+
 def button4_snifh(self):
     pygame.quit()
     run_cmd(CMDSNIFH)
     os.execv(__file__, sys.argv)
+
 
 def button41_dumpl(self):
     pygame.quit()
     run_cmd(CMDDUMPL)
     os.execv(__file__, sys.argv)
 
+
 def button42_dumph(self):
     pygame.quit()
     run_cmd(CMDDUMPH)
     os.execv(__file__, sys.argv)
+
 
 def button5(self):
     index.setIndex(1)
@@ -278,6 +247,12 @@ def button9(self):
      return output
 
 
+def button10_playv(self):
+    pygame.quit()
+    run_cmd(CMDPLAYV)
+    os.execv(__file__, sys.argv)
+
+
 a1.click = types.MethodType(button1, a1)
 a3.click = types.MethodType(button3_snifb, a3)
 a4.click = types.MethodType(button4_snifh, a4)
@@ -287,12 +262,13 @@ a5.click = types.MethodType(button5, a5)
 a7.click = types.MethodType(button7, a7)
 a8.click = types.MethodType(button8, a8)
 a9.click = types.MethodType(button9, a9)
+a10.click = types.MethodType(button10_playv, a10)
 
 l1 = Label((30,15), 48)
 l2 = Label((300,30), 30)
 
 def get_text1(self):
-    return strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    return strftime("%Y-%m-%d %H:%M:%S", localtime())
 
 
 def get_text2(self):
@@ -305,7 +281,7 @@ s1 = Screen()
 s1.attach(l1,a1,a3,a4,a41,a42,a5)
 
 s2 = Screen()
-s2.attach(l2,a7,a8,a9)
+s2.attach(l2,a7,a8,a9,a10)
 
 screens = [s1,s2]
 
