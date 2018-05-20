@@ -1,0 +1,60 @@
+diff --git a/arch/arm/boot/dts/meson8b_odroidc.dts b/arch/arm/boot/dts/meson8b_odroidc.dts
+index 0609574..d4ac3ec 100755
+--- a/arch/arm/boot/dts/meson8b_odroidc.dts
++++ b/arch/arm/boot/dts/meson8b_odroidc.dts
+@@ -581,22 +581,28 @@
+         pinctrl-names="default";
+         pinctrl-0=<&aml_spicc_pins>;
+         device_id = <0>;
+-        num_chipselect = <2>;
+-        cs_gpios = "GPIOX_20", "GPIOX_21";
++        num_chipselect = <3>;
++        cs_gpios = "GPIOX_20", "GPIOX_21", "GPIOX_6";
++  
++       can0: mcp2515@0 {
+ 
+-	/*
+-        can0: mcp2515@0 {
+             compatible = "microchip,mcp2515";
+             reg = <0>;
++            clocks = <&mcp2515_clk>;
+             spi-max-frequency = <10000000>;
+             irq-falling = <1>;
+             irq-gpio = "GPIOY_3";
++            mcp2515_clk: oscillator {
++                #clock-cells = <0>;
++                compatible = "fixed-clock";
++                clock-frequency = <8000000>;
++            };
+         };
+-	*/
++	
+         spidev@0 {
+             spi-max-frequency = <2000000>;
+             compatible = "spidev";
+-            reg = <0>;
++            reg = <2>;
+         };
+ 		/* SPI Touch Screen Define */
+ 		ads7846@1 {
+diff --git a/drivers/net/can/mcp251x.c b/drivers/net/can/mcp251x.c
+index 60e7fd7..3d6196a 100644
+--- a/drivers/net/can/mcp251x.c
++++ b/drivers/net/can/mcp251x.c
+@@ -1135,14 +1135,14 @@ static int mcp251x_can_probe(struct spi_device *spi)
+ 			freq = pdata->oscillator_frequency;
+ 		else
+ #if defined(CONFIG_MACH_MESON8B_ODROIDC)
+-			freq = 10000000;
++			freq = 8000000;
+ #else
+ 			return PTR_ERR(clk);
+ #endif
+ 	} else {
+ 		freq = clk_get_rate(clk);
+ 	}
+-
++	printk("!!!!!!!!!!!!!!!!!!!! oscillator_f = %d\n",freq);
+ 	/* Sanity check */
+ 	if (freq < 1000000 || freq > 25000000)
+ 		return -ERANGE;

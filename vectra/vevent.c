@@ -13,6 +13,12 @@
 
 /* TODO: Close fd on SIGINT (Ctrl-C), if it's open */
 
+struct pixel
+{
+    int x;
+    int y;
+};
+
 int main(int argc, char *argv[])
 {
     struct input_event ev;
@@ -43,7 +49,12 @@ int main(int argc, char *argv[])
     /* Print Device Name */
     ioctl(fd, EVIOCGNAME(sizeof(name)), name);
     syslog(LOG_NOTICE, "Reading from: device file = %s device name = %s", EVENT_DEVICE,  name);
-    for (;;) {
+    struct pixel xy;
+    xy.x = -1;
+    xy.y = -1;
+
+    for (;;) 
+    {
         const size_t ev_size = sizeof(struct input_event);
         ssize_t size;
 
@@ -55,15 +66,29 @@ int main(int argc, char *argv[])
             goto err;
         }
 
-        if (ev.type == EVENT_TYPE && (ev.code == EVENT_CODE_X)) {
-            /* TODO: convert value to pixels */
-            syslog(LOG_NOTICE, "pid %u X = %d", xterm_pid, ev.value);
-            if(ev.value > 700)
+        if (ev.type == EVENT_TYPE)
+        { 
+            if (ev.code == EVENT_CODE_X)
+            {
+                    xy.x = ev.value;
+                    xy.y = -1;
+            }
+            if (ev.code == EVENT_CODE_Y) 
+                    xy.y = ev.value;
+        }
+        
+        if (xy.x != -1 && xy.y != -1) 
+        {
+            syslog(LOG_NOTICE, "pid %u x=%d, y=%d", xterm_pid, xy.x, xy.y);
+            if(xy.x > 700 && xy.y < 100)
             {
                 kill(xterm_pid, SIGKILL);
                 return EXIT_SUCCESS;
             }
+            xy.x = -1;
+            xy.y = -1;
         }
+        
     }
     closelog();
     return EXIT_SUCCESS;
