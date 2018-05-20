@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import types
 import sys
 import os
@@ -88,18 +89,52 @@ screen = pygame.display.set_mode(size)
 
 globalcan = GlobalCan()
 
+#m = ''
+# [8,12,16,20,26,40,58,61,70,77,79,81,86,90,92,96,101,102,112,117,128,131,133,141,150,151,157,161,165,173,174,177,179]
+
+#k = pygame.font.get_fonts()
+#with open("/tmp/pyfonts.txt","r+") as f:
+#    m = f.read()
+#    i = int(m) + 1
+#    if i > len(k) :
+#        i = len(k) - 1
+#    f.seek(0)
+#    f.write(str(i))
+#    f.truncate()
 
 
-class Label(object):
-    def __init__(self, pos, fontsize, colors=(tron_light, black)):
+font_index = 12#int(m)
+
+class Line(object):
+    def __init__(self, spos, epos, wide, colors=(tron_light, black)):
         self._colors = colors
-        self.x, self.y = pos
-        self._fontsize = fontsize
+        self.spos = spos
+        self.epos = epos
+        self._wide = wide
 
 
     def render(self, inverse_color=0):
-        font=pygame.font.Font(None,self._fontsize)
-        label=font.render(str(self.get_text()), 1, (self._colors[inverse_color]))
+        pygame.draw.line(screen, self._colors[inverse_color], self.spos, self.epos, self._wide)
+
+
+    def __contains__(self, a):
+        return False
+
+
+class Label(object):
+    def __init__(self, pos, fontsize, colors=(tron_light, black), font = None):
+        self._colors = colors
+        self.x, self.y = pos
+        self._fontsize = fontsize
+        self._font = font
+
+
+    def render(self, inverse_color=0):
+        if self._font == None:
+            font=pygame.font.Font(self._font,self._fontsize)
+        else:
+            font=self._font
+        label=font.render(self.get_text(), 1, (self._colors[inverse_color]))
         background = int(not bool(inverse_color)) 
         pygame.draw.rect(screen, self._colors[background], (self.x,self.y,label.get_width(),label.get_height()),0)
         screen.blit(label,(self.x,self.y))
@@ -264,21 +299,46 @@ a8.click = types.MethodType(button8, a8)
 a9.click = types.MethodType(button9, a9)
 a10.click = types.MethodType(button10_playv, a10)
 
-l1 = Label((30,15), 48)
+
+font2_name = 'dejavusans'#k[font_index]
+
+
+l1 = Label((400,90), 58)
+l10 = Label((390,170), 43, font=pygame.font.SysFont(font2_name,27))
+l9 = Label((280,220), 43, font=pygame.font.SysFont(font2_name,27))
+l8 = Label((310,270), 43, font=pygame.font.SysFont(font2_name,27))
+l11 = Label((650,355), 32,font=pygame.font.SysFont(font2_name,27))
 l2 = Label((300,30), 30)
 
 def get_text1(self):
-    return strftime("%Y-%m-%d %H:%M:%S", localtime())
+    return strftime("%d.%m.%Y", localtime())
 
+def get_text10(self):
+    return u"Range      %s km" % ('180'.rjust(4))
+
+def get_text9(self):
+    return u"Ø-Consumption       %s Ltr/100 km" % ('14.1'.rjust(4))
+
+def get_text8(self):
+    return u"%s     %s" % ('dejavusans', 12) # ( k[font_index], font_index)
+
+def get_text11(self):
+    return strftime("%H:%M:%S", localtime())
 
 def get_text2(self):
     return 'CAN: %s' % globalcan.getData()[:3]
 
 l1.get_text = types.MethodType(get_text1, l1)
+l10.get_text = types.MethodType(get_text10, l10)
+l9.get_text = types.MethodType(get_text9, l9)
+l8.get_text = types.MethodType(get_text8, l8)
+l11.get_text = types.MethodType(get_text11, l11)
 l2.get_text = types.MethodType(get_text2, l2)
 
+n1 = Line((230,150),(750,150),4)
+
 s1 = Screen()
-s1.attach(l1,a1,a3,a4,a41,a42,a5)
+s1.attach(l1,a1,a3,a4,a41,a42,a5,l11,n1,l10,l9,l8)
 
 s2 = Screen()
 s2.attach(l2,a7,a8,a9,a10)
