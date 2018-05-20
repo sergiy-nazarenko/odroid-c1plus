@@ -10,7 +10,7 @@
 #define EVENT_TYPE      EV_ABS
 #define EVENT_CODE_X    ABS_X
 #define EVENT_CODE_Y    ABS_Y
-
+// https://stackoverflow.com/questions/28841139/how-to-get-coordinates-of-touchscreen-rawdata-using-linux?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 /* TODO: Close fd on SIGINT (Ctrl-C), if it's open */
 
 int main(int argc, char *argv[])
