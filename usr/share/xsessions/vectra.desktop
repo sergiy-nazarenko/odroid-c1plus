@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Exec=/home/odroid/workspace/vectra/menu
+TryExec=/home/odroid/workspace/vectra/menu
+Name=Vectra Info Display
+Comment=Testing
