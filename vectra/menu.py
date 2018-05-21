@@ -306,9 +306,18 @@ font2_name = 'dejavusans'#k[font_index]
 l1 = Label((400,90), 58)
 l10 = Label((390,170), 43, font=pygame.font.SysFont(font2_name,27))
 l9 = Label((280,220), 43, font=pygame.font.SysFont(font2_name,27))
-l8 = Label((310,270), 43, font=pygame.font.SysFont(font2_name,27))
-l11 = Label((650,355), 32,font=pygame.font.SysFont(font2_name,27))
+l8 = Label((280,270), 43, font=pygame.font.SysFont(font2_name,27))
+l11 = Label((650,340), 32, font=pygame.font.SysFont(font2_name,27))
 l2 = Label((300,30), 30)
+l12 = Label((230,340), 32, font=pygame.font.SysFont(font2_name,27))
+l0 = Label((10,10), 58, font=pygame.font.SysFont(font2_name,27))
+
+
+def get_text12(self):
+    return u"20 C"
+
+def get_text0(self):
+    return u"%s     %s" % ('dejavusans', 5) # ( k[font_index], font_index)
 
 def get_text1(self):
     return strftime("%d.%m.%Y", localtime())
@@ -320,7 +329,7 @@ def get_text9(self):
     return u"Ø-Consumption       %s Ltr/100 km" % ('14.1'.rjust(4))
 
 def get_text8(self):
-    return u"%s     %s" % ('dejavusans', 12) # ( k[font_index], font_index)
+    return u"Inst. consumpt.      %s %s" % ('1.2', 'Ltr./h') # ( k[font_index], font_index)
 
 def get_text11(self):
     return strftime("%H:%M:%S", localtime())
@@ -334,11 +343,15 @@ l9.get_text = types.MethodType(get_text9, l9)
 l8.get_text = types.MethodType(get_text8, l8)
 l11.get_text = types.MethodType(get_text11, l11)
 l2.get_text = types.MethodType(get_text2, l2)
+l0.get_text = types.MethodType(get_text0, l0)
+l12.get_text = types.MethodType(get_text12, l12)
 
 n1 = Line((230,150),(750,150),4)
+n2 = Line((300,330),(680,330),4)
+n3 = Line((300,330),(300,380),4)
 
 s1 = Screen()
-s1.attach(l1,a1,a3,a4,a41,a42,a5,l11,n1,l10,l9,l8)
+s1.attach(l1,a1,a3,a4,a41,a42,a5,l11,n1,l10,l9,l8,l0,n2,n3,l12)
 
 s2 = Screen()
 s2.attach(l2,a7,a8,a9,a10)
