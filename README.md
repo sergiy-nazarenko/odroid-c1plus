@@ -57,6 +57,8 @@ http://www.hardkernel.com/main/products/prdt_info.php?g_code=G147563061546
 
 https://fabiobaltieri.com/2013/07/23/hacking-into-a-vehicle-can-bus-toyothack-and-socketcan/
 
+https://www.sans.org/reading-room/whitepapers/awareness/hacking-bus-basic-manipulation-modern-automobile-through-bus-reverse-engineering-37825
+
 https://github.com/garthvh/pitftmenu
 
 https://github.com/Afterglow/arduino-gmlan
