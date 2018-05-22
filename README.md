@@ -55,6 +55,8 @@ https://os.mbed.com/cookbook/OBDII-Can-Bus
 
 http://www.hardkernel.com/main/products/prdt_info.php?g_code=G147563061546
 
+https://fabiobaltieri.com/2013/07/23/hacking-into-a-vehicle-can-bus-toyothack-and-socketcan/
+
 https://github.com/garthvh/pitftmenu
 
 https://github.com/Afterglow/arduino-gmlan
