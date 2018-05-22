@@ -36,6 +36,17 @@ make
 sudo make install
 
 
+***
+Info
+---------------------
+
+OPCOM Vauxhall / Opel Diagnostic Scanner OBD2 OBDII Fault Code Reader OP-COM USB PC
+
+HSCAN - Dual-wire, High Speed CAN-BUS, 500 kbps
+
+MSCAN - Dual-wire, Medium Speed CAN-BUS, 95 kbps
+
+SWCAN - Single-wire, Low Speed CAN-BUS, 33.3 kbps
 
 ***
 Links
