@@ -60,5 +60,7 @@ https://forum.odroid.com/viewtopic.php?f=95&t=29308
 
 https://github.com/p1ne/can-relay/
 
+http://aterlux.ru/article/nrf24l01p
+
 
 
