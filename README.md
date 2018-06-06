@@ -36,11 +36,28 @@ make
 sudo make install
 
 
+***
+Info
+---------------------
+
+OPCOM Vauxhall / Opel Diagnostic Scanner OBD2 OBDII Fault Code Reader OP-COM USB PC
+
+HSCAN - Dual-wire, High Speed CAN-BUS, 500 kbps
+
+MSCAN - Dual-wire, Medium Speed CAN-BUS, 95 kbps
+
+SWCAN - Single-wire, Low Speed CAN-BUS, 33.3 kbps
 
 ***
 Links
 ---------------------------------------
+https://os.mbed.com/cookbook/OBDII-Can-Bus
+
 http://www.hardkernel.com/main/products/prdt_info.php?g_code=G147563061546
+
+https://fabiobaltieri.com/2013/07/23/hacking-into-a-vehicle-can-bus-toyothack-and-socketcan/
+
+https://www.sans.org/reading-room/whitepapers/awareness/hacking-bus-basic-manipulation-modern-automobile-through-bus-reverse-engineering-37825
 
 https://github.com/garthvh/pitftmenu
 
@@ -59,6 +76,8 @@ https://www.youtube.com/watch?v=yOIXnQCXnhg&feature=youtu.be
 https://forum.odroid.com/viewtopic.php?f=95&t=29308
 
 https://github.com/p1ne/can-relay/
+
+http://lnxpps.de/rpie/
 
 http://aterlux.ru/article/nrf24l01p
 
