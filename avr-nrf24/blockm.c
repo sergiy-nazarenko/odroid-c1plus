@@ -278,12 +278,30 @@ void on_packet(uint8_t * buf, uint8_t size)
     if (buf[0] == 0x47)
     {
         PORTA |= (1<<4);
-        BLOCKM_STAT |= (1<<1);
+        BLOCKM_STAT |= (1<<0);
     }
     if (buf[0] == 0x00)
     {
         PORTA &= ~(1<<4);
-        BLOCKM_STAT |= (1<<0);
+        BLOCKM_STAT &=~ (1<<0);
+    }
+
+    if (buf[1] | (1<<0))
+    {
+        PORTA |= (1<<4);
+        BLOCKM_STAT |= (1<<1);
+
+        if( (buf[1] | (1<<1))
+            & (buf[1] | (1<<2))
+            & (buf[1] | (1<<3))
+            )
+        {
+            blink = true;
+        }
+        else
+        {
+            blink = false;
+        }
     }
     // Если предполагается немедленная отправка ответа, то необходимо обеспечить задержку ,
     // во время которой чип отправит подтверждение о приёме 
@@ -363,6 +381,11 @@ void check_radio()
 ISR(TIMER1_COMPA_vect)
 {
     radio_delay++;
+
+    if(blink == true)
+    {
+        PORTA ^= (1<<4);
+    }
 }
 
 
@@ -374,6 +397,7 @@ int main(void)
     DDRA |= 1<<4;
     PORTA |= 1<<3;
     PORTA &= ~(1<<4);
+
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK |= (1 << OCIE1A); // enable the CTC interrupt
 
@@ -407,6 +431,7 @@ int main(void)
         {
                 radio_delay = 0;
                 PORTA &= ~(1<<4);
+                blink = false;
         }
     }
 }
