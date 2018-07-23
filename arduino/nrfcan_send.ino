@@ -18,8 +18,8 @@
 #include "mcp_can.h"
 #include <stdio.h>
 
-#define MDEBUG
-
+//#define MDEBUG
+//
 //
 // Hardware configuration
 //
@@ -48,29 +48,6 @@ const int role_pin = 5;
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xA0A0A0A0A0LL, 0xD0D0D0D0D0LL };
 
-//
-// Role management
-//
-// Set up role.  This sketch uses the same software for all the nodes
-// in this system.  Doing so greatly simplifies testing.  The hardware itself specifies
-// which node it is.
-//
-// This is done through the role_pin
-//
-
-// The various roles supported by this sketch
-typedef enum { role_ping_out = 1, role_pong_back } role_e;
-
-// The debug-friendly names of those roles
-const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
-
-// The role of the current running sketch
-role_e role;
-
-//
-// Payload
-//
-
 const int min_payload_size = 4;
 const int max_payload_size = 32;
 const int payload_size_increments_by = 1;
@@ -87,7 +64,7 @@ unsigned char can_msg_len = 0;
 unsigned char can_msg_buf[8];
 
 unsigned char flag_send_counter = 0;
-unsigned char flag_send = 4;
+unsigned char flag_send = 3;
 
 char send_payload[4] = {0x00,0x00,0x00,0x00};
 
@@ -105,10 +82,12 @@ void setup(void)
 #endif
   pinMode(7, OUTPUT);
   pinMode(6, OUTPUT);
+  pinMode(23, OUTPUT);
   digitalWrite(7, HIGH);
   digitalWrite(6, HIGH);
+  digitalWrite(23, HIGH);
   
-    while (CAN_OK != CAN.begin(CAN_95K24BPS, MCP_8MHz))              // init can bus : baudrate = 500k
+    while (CAN_OK != CAN.begin(CAN_33KBPS, MCP_8MHz))              // init can bus : baudrate = 500k
     {
 #ifdef MDEBUG
         Serial.println("CAN BUS Shield init fail");
@@ -121,13 +100,18 @@ void setup(void)
     Serial.println("CAN BUS Shield init ok!");
 #endif
     digitalWrite(7, LOW);
-    digitalWrite(7, LOW);
+    digitalWrite(6, LOW);
+    digitalWrite(23, LOW);
 
 //    attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
   CAN.init_Mask(0, 0, 0x3ff);
   CAN.init_Mask(1, 0, 0x3ff);
   CAN.init_Filt(0, 0, 0x450);                          // there is filter in mcp2515
   CAN.init_Filt(1, 0, 0x450);                          // there is filter in mcp2515
+  CAN.init_Filt(0, 0, 0x350);                          // there is filter in mcp2515
+  CAN.init_Filt(1, 0, 0x350);                          // there is filter in mcp2515
+  CAN.init_Filt(0, 0, 0x260);                          // there is filter in mcp2515
+  CAN.init_Filt(1, 0, 0x260);                          // there is filter in mcp2515
   delay(100);
   // Role
   //
@@ -141,8 +125,7 @@ void setup(void)
   stdout = &uartout;
   
   Serial.println(F("RF24/examples/pingpair_dyn/"));
-  Serial.print(F("ROLE: "));
-  Serial.println(role_friendly_name[role]);
+ 
 #endif
   //
   // Setup and configure rf radio
@@ -210,30 +193,44 @@ void loop(void)
             Serial.print(" ");
 #endif
             if (can_msg_len == 4 && flag_send_counter >= flag_send)
-            {
-              flag_send_counter = 0;
               send_payload[0] = can_msg_buf[3];
-            }
             
             if (send_payload[0] != can_msg_buf[3])
                 flag_send_counter++;
+            else
+                flag_send_counter = 0;
             
             if (send_payload[0] == 0x47)
-              digitalWrite(6, HIGH);         
+              digitalWrite(23, HIGH);         
             else
-              digitalWrite(6, LOW);         
+              digitalWrite(23, LOW);         
         
 #ifdef MDEBUG
             for(int i = 0; i<can_msg_len; i++)    // print the data
             {
                 Serial.print("0x");
-                Serial.print(send_payload[i], HEX);
+                Serial.print(can_msg_buf[i], HEX);
                 Serial.print(" ");
             }
             Serial.println();
 #endif
         }// if can.getid() == 450
+        if(CAN.getCanId() == 0x350)
+        {
+          send_payload[1] = can_msg_buf[0];
+          if (0b00000100 & can_msg_buf[0])
+          else 
+        }
+        if(CAN.getCanId() == 0x260)
+        {
+          send_payload[2] = 
+        }
+        
     }// if can.checkrecieve
+    /*else
+    {
+        flag_send_counter = 0;
+    }*/
     
     // First, stop listening so we can talk.
     radio.stopListening();
@@ -274,7 +271,6 @@ void loop(void)
         return; 
       
       radio.read( receive_payload, len );
-
       // Put a zero at the end for easy printing
       receive_payload[len] = 0;
 
