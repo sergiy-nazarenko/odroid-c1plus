@@ -296,11 +296,11 @@ void on_packet(uint8_t * buf, uint8_t size)
             & (buf[1] | (1<<3))
             )
         {
-            blink = true;
+            TIMSK |= (1<<TOIE0);
         }
         else
         {
-            blink = false;
+            TIMSK &=~ (1<<TOIE0);
         }
     }
     // Если предполагается немедленная отправка ответа, то необходимо обеспечить задержку ,
@@ -382,15 +382,20 @@ ISR(TIMER1_COMPA_vect)
 {
     radio_delay++;
 
-    if(blink == true)
-    {
-        PORTA ^= (1<<4);
-    }
+    // if(blink == true)
+    // {
+    //     PORTA ^= (1<<4);
+    // }
 }
 
 
+ISR(TIMER0_OVF_vect)
+{
+    PORTA ^= (1<<4);
+}
 
-// Основной цикл
+//ISR(TIMER1_COMPA_vect, ISR_ALIASOF(TIMER0_COMPA_vect));
+
 int main(void) 
 {
     DDRA |= 1<<3;
@@ -401,8 +406,14 @@ int main(void)
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK |= (1 << OCIE1A); // enable the CTC interrupt
 
+    // timer0 code
+    TIMSK |= 1<<TOIE0;
+    TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
+    TCCR0 |= (1<<CS02) | (1<<CS00);
+    // timer0 end code
+
     sei();
-    OCR1A = 15625;
+    OCR1A = 15625; // 16 000 000 / 1024 //This flag is set in the timer clock cycle after the counter 
     TCCR1B |= ((1 << CS12) | (1 << CS10)); // start the timer at 16MHz/1024
 
     
