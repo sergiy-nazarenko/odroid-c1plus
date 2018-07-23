@@ -215,15 +215,29 @@ void loop(void)
             Serial.println();
 #endif
         }// if can.getid() == 450
-        if(CAN.getCanId() == 0x350)
+        if(CAN.getCanId() == 0x350) 
         {
-          send_payload[1] = can_msg_buf[0];
-          if (0b00000100 & can_msg_buf[0])
-          else 
+          if ( can_msg_buf[0] | (1<<2) )
+              send_payload[1] |= (1<<0);
+          else
+              send_payload[1] &=~ (1<<0);
         }
         if(CAN.getCanId() == 0x260)
         {
-          send_payload[2] = 
+          if ( can_msg_buf[0] == 0b00100101 )
+              send_payload[1] |= (1<<1);
+          else
+              send_payload[1] &=~ (1<<1);
+
+          if ( can_msg_buf[0] == 0b00111010 )
+              send_payload[1] |= (1<<2);
+          else
+              send_payload[1] &=~ (1<<2);
+
+          if ( can_msg_buf[0] == 0b00011111 )
+              send_payload[1] |= (1<<3);
+          else
+              send_payload[1] &=~ (1<<3);
         }
         
     }// if can.checkrecieve
