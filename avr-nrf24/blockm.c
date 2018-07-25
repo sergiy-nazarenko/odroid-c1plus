@@ -6,6 +6,7 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+
 #ifdef MDEBUG
     #include "uart/uart.h"
     #define UART_BAUDRATE (F_CPU/16/9600)-1
@@ -36,6 +37,9 @@ uint8_t spi_send_recv(uint8_t data)
 #define RADIO_CSN 4
 #define RADIO_CE 3
 #define RADIO_IRQ 2
+
+#define RELAY_PIN 4
+#define BLINK_PIN 3
 
 // Выбирает активное состояние (высокий уровень) на линии CE
 inline void radio_assert_ce() 
@@ -253,14 +257,14 @@ uint8_t send_data(uint8_t * buf, uint8_t size)
 
 volatile unsigned char BLOCKM_STAT = 0;
 volatile uint8_t radio_delay = 0;
-volatile uint8_t blink_day_light = 0;
+volatile uint8_t blink_daylights = 0;
 
 // Вызывается при получении нового пакета по каналу 1 от удалённой стороны.
 // buf - буфер с данными, size - длина данных (от 1 до 32)
 void on_packet(uint8_t * buf, uint8_t size) 
 {
     // TODO здесь нужно написать обработчик принятого пакета
-    PORTA |= (1<<3);
+    PORTA |= (1<<BLINK_PIN);
     radio_delay = 0;
 
 #ifdef MDEBUG    
@@ -275,42 +279,49 @@ void on_packet(uint8_t * buf, uint8_t size)
     uart_puts(buff);
     uart_puts("\r\n");
 #endif
-
+/*
     if (buf[0] == 0x47)
     {
-        PORTA |= (1<<4);
+        PORTA |= (1<<RELAY_PIN);
         BLOCKM_STAT |= (1<<0);
     }
     if (buf[0] == 0x00)
     {
-        PORTA &= ~(1<<4);
+        PORTA &= ~(1<<RELAY_PIN);
         BLOCKM_STAT &=~ (1<<0);
     }
-
-    if (buf[1] | (1<<0))
+*/
+    if (buf[1] & (1<<0))
     {
-        PORTA |= (1<<4);
-        BLOCKM_STAT |= (1<<1);
+        BLOCKM_STAT |= (1<<0);
 
-        if( (buf[1] | (1<<1))
-            & (buf[1] | (1<<2))
-            & (buf[1] | (1<<3))
-            )
+        if( (buf[1] & (1<<1))
+            | (buf[1] & (1<<2))
+            | (buf[1] & (1<<3))
+          )
         {
-            TIMSK |= (1<<TOIE0);
-            blink_day_light = 0;
-            TCNT0 = 0x00;
+           TIMSK |= (1<<TOIE0);
+           BLOCKM_STAT |= (1<<1);
         }
         else
         {
             TIMSK &=~ (1<<TOIE0);
+            PORTA |= (1<<RELAY_PIN);
+            BLOCKM_STAT &=~ (1<<1);
         }
+    }
+    else
+    {
+        TIMSK &=~ (1<<TOIE0);
+        PORTA &= ~(1<<RELAY_PIN);
+        BLOCKM_STAT &=~ (1<<0);
     }
     // Если предполагается немедленная отправка ответа, то необходимо обеспечить задержку ,
     // во время которой чип отправит подтверждение о приёме 
     // чтобы с момента приёма пакета до перевода в режим PTX прошло:
     // 130мкс + ((длина_адреса + длина_CRC + длина_данных_подтверждения) * 8 + 17) / скорость_обмена
-    // При типичных условиях и частоте МК 8 мГц достаточно дополнительной задержки 100мкс
+    // При типичных условиях и частоте МК 8 мГц достаточно 
+    // дополнительной задержки 100мкс
     _delay_us(200);    
     char payload_send[16] = {
                                 BLOCKM_STAT,0x00,0x00,0x00
@@ -323,7 +334,7 @@ void on_packet(uint8_t * buf, uint8_t size)
 
 void check_radio() 
 {
-    PORTA &= ~(1<<3);
+    PORTA &= ~(1<<BLINK_PIN);
 
     if (!radio_is_interrupt()) // Если прерывания нет, то не задерживаемся
         return;
@@ -389,7 +400,7 @@ ISR(TIMER1_COMPA_vect)
 
 ISR(TIMER0_OVF_vect)
 {
-    blink_day_light++;
+    blink_daylights++;
 }
 
 //ISR(TIMER1_COMPA_vect, ISR_ALIASOF(TIMER0_COMPA_vect));
@@ -398,17 +409,17 @@ int main(void)
 {
     DDRA |= 1<<3;
     DDRA |= 1<<4;
-    PORTA |= 1<<3;
-    PORTA &= ~(1<<4);
+    PORTA |= 1<<BLINK_PIN;
+    PORTA &= ~(1<<RELAY_PIN);
 
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK |= (1 << OCIE1A); // enable the CTC interrupt
 
     // timer0 code
-    TIMSK |= 1<<TOIE0;
+    //TIMSK |= 1<<TOIE0;
+    OCR0 = 0xFF;
     TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
     TCCR0 |= (1<<CS02) | (1<<CS00);
-    OCR0 = 0xFF;
     // timer0 end code
 
     sei();
@@ -421,7 +432,7 @@ int main(void)
 #endif
 
     radio_init();
-    while (!radio_start())
+    while (!radio_start()) 
     { 
         _delay_ms(1000);
     }
@@ -433,20 +444,19 @@ int main(void)
 
     radio_assert_ce();
 
-    for(;;)
+    for(;;) 
     {
         check_radio();
   
         if(radio_delay >= 70)
         {
             radio_delay = 0;
-            PORTA &= ~(1<<4);
+            PORTA &= ~(1<<RELAY_PIN);
         }
-
-        if(blink_day_light >= 30)
+        if(blink_daylights >= 35)
         {
-            blink_day_light = 0;
-            PORTA ^= (1<<3);
+            blink_daylights = 0;
+            PORTA ^= (1<<RELAY_PIN);
         }
     }
 }

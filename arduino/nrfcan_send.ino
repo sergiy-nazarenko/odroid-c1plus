@@ -23,6 +23,9 @@
 //
 // Hardware configuration
 //
+#define BLUE_LED 5
+#define WHITE_LED 7
+#define YELLOW_LED 6
 
 #ifdef MDEBUG
 static FILE uartout = {0};
@@ -40,6 +43,7 @@ RF24 radio(RF_CS_PIN, 10);
 // sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
 // Leave open to be the 'ping' transmitter
 const int role_pin = 5;
+
 
 //
 // Topology
@@ -80,12 +84,12 @@ void setup(void)
 #ifdef MDEBUG
   Serial.begin(9600);
 #endif
-  pinMode(7, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(23, OUTPUT);
-  digitalWrite(7, HIGH);
-  digitalWrite(6, HIGH);
-  digitalWrite(23, HIGH);
+  pinMode(WHITE_LED, OUTPUT);
+  pinMode(YELLOW_LED, OUTPUT);
+  pinMode(BLUE_LED, OUTPUT);
+  digitalWrite(WHITE_LED, HIGH);
+  digitalWrite(YELLOW_LED, HIGH);
+  digitalWrite(BLUE_LED, HIGH);
   
     while (CAN_OK != CAN.begin(CAN_33KBPS, MCP_8MHz))              // init can bus : baudrate = 500k
     {
@@ -99,9 +103,9 @@ void setup(void)
 #ifdef MDEBUG  
     Serial.println("CAN BUS Shield init ok!");
 #endif
-    digitalWrite(7, LOW);
-    digitalWrite(6, LOW);
-    digitalWrite(23, LOW);
+    digitalWrite(WHITE_LED, LOW);
+    digitalWrite(YELLOW_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
 
 //    attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
   CAN.init_Mask(0, 0, 0x5ff);
@@ -179,7 +183,7 @@ void loop(void)
         CAN.readMsgBuf(&can_msg_len, can_msg_buf);    // read data,  len: data length, buf: data buf
         if(CAN.getCanId() == 0x450)
         {
-            digitalWrite(7, HIGH);
+            digitalWrite(WHITE_LED, HIGH);
 #ifdef MDEBUG        
             Serial.println("\r\n-----------");
             Serial.print("Get Data From id: 0x");
@@ -198,9 +202,9 @@ void loop(void)
                 flag_send_counter = 0;
             
             if (send_payload[0] == 0x47)
-              digitalWrite(23, HIGH);         
+              digitalWrite(BLUE_LED, HIGH);         
             else
-              digitalWrite(23, LOW);         
+              digitalWrite(BLUE_LED, LOW);         
         
 #ifdef MDEBUG
             for(int i = 0; i<can_msg_len; i++)    // print the data
@@ -214,13 +218,20 @@ void loop(void)
         }// if can.getid() == 450
         if(CAN.getCanId() == 0x350) 
         {
-          if ( can_msg_buf[0] | (1<<2) )
+          if ( can_msg_buf[0] & (1<<2) )
+          {
+              digitalWrite(BLUE_LED, HIGH);
               send_payload[1] |= (1<<0);
+          }
           else
+          {
+              digitalWrite(BLUE_LED, LOW);
               send_payload[1] &=~ (1<<0);
+          }
         }
         if(CAN.getCanId() == 0x260)
         {
+          digitalWrite(WHITE_LED, HIGH);
           if ( can_msg_buf[0] == 0b00100101 )
               send_payload[1] |= (1<<1);
           else
@@ -232,9 +243,16 @@ void loop(void)
               send_payload[1] &=~ (1<<2);
 
           if ( can_msg_buf[0] == 0b00011111 )
+          {
+              digitalWrite(YELLOW_LED, HIGH);
               send_payload[1] |= (1<<3);
+          }
           else
+          {
+              digitalWrite(YELLOW_LED, LOW);
               send_payload[1] &=~ (1<<3);
+          }
+          
         }
         
     }// if can.checkrecieve
@@ -263,7 +281,8 @@ void loop(void)
     while ( ! radio.available() && ! timeout )
       if (millis() - started_waiting_at > 500 )
         timeout = true;
-    digitalWrite(7, LOW);
+    digitalWrite(WHITE_LED, LOW);
+    digitalWrite(BLUE_LED, LOW);
     
     // Describe the results
     if ( timeout )
