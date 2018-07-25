@@ -253,6 +253,7 @@ uint8_t send_data(uint8_t * buf, uint8_t size)
 
 volatile unsigned char BLOCKM_STAT = 0;
 volatile uint8_t radio_delay = 0;
+volatile uint8_t blink_day_light = 0;
 
 // Вызывается при получении нового пакета по каналу 1 от удалённой стороны.
 // buf - буфер с данными, size - длина данных (от 1 до 32)
@@ -297,6 +298,8 @@ void on_packet(uint8_t * buf, uint8_t size)
             )
         {
             TIMSK |= (1<<TOIE0);
+            blink_day_light = 0;
+            TCNT0 = 0x00;
         }
         else
         {
@@ -381,17 +384,12 @@ void check_radio()
 ISR(TIMER1_COMPA_vect)
 {
     radio_delay++;
-
-    // if(blink == true)
-    // {
-    //     PORTA ^= (1<<4);
-    // }
 }
 
 
 ISR(TIMER0_OVF_vect)
 {
-    PORTA ^= (1<<4);
+    blink_day_light++;
 }
 
 //ISR(TIMER1_COMPA_vect, ISR_ALIASOF(TIMER0_COMPA_vect));
@@ -410,6 +408,7 @@ int main(void)
     TIMSK |= 1<<TOIE0;
     TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
     TCCR0 |= (1<<CS02) | (1<<CS00);
+    OCR0 = 0xFF;
     // timer0 end code
 
     sei();
@@ -422,7 +421,7 @@ int main(void)
 #endif
 
     radio_init();
-    while (!radio_start()) 
+    while (!radio_start())
     { 
         _delay_ms(1000);
     }
@@ -434,15 +433,20 @@ int main(void)
 
     radio_assert_ce();
 
-    for(;;) 
+    for(;;)
     {
         check_radio();
   
         if(radio_delay >= 70)
         {
-                radio_delay = 0;
-                PORTA &= ~(1<<4);
-                blink = false;
+            radio_delay = 0;
+            PORTA &= ~(1<<4);
+        }
+
+        if(blink_day_light >= 30)
+        {
+            blink_day_light = 0;
+            PORTA ^= (1<<3);
         }
     }
 }
