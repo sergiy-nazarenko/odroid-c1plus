@@ -106,9 +106,9 @@ void setup(void)
 //    attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
   CAN.init_Mask(0, 0, 0x5ff);
   CAN.init_Mask(1, 0, 0x5ff);
-  CAN.init_Filt(0, 1, 0x450);                          // there is filter in mcp2515
-  CAN.init_Filt(1, 1, 0x350);                          // there is filter in mcp2515
-  CAN.init_Filt(2, 1, 0x260);                          // there is filter in mcp2515
+  CAN.init_Filt(0, 0, 0x450);                          // there is filter in mcp2515
+  CAN.init_Filt(1, 0, 0x350);                          // there is filter in mcp2515
+  CAN.init_Filt(2, 0, 0x260);                          // there is filter in mcp2515
   delay(100);
   // Role
   //
