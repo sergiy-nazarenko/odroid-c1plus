@@ -38,7 +38,8 @@ uint8_t spi_send_recv(uint8_t data)
 #define RADIO_CE 3
 #define RADIO_IRQ 2
 
-#define RELAY_PIN 4
+#define RELAY_R_PIN 4
+#define RELAY_L_PIN 5
 #define BLINK_PIN 3
 
 // Выбирает активное состояние (высокий уровень) на линии CE
@@ -257,7 +258,6 @@ uint8_t send_data(uint8_t * buf, uint8_t size)
 
 volatile unsigned char BLOCKM_STAT = 0;
 volatile uint8_t radio_delay = 0;
-volatile uint8_t blink_daylights = 0;
 
 // Вызывается при получении нового пакета по каналу 1 от удалённой стороны.
 // buf - буфер с данными, size - длина данных (от 1 до 32)
@@ -279,42 +279,53 @@ void on_packet(uint8_t * buf, uint8_t size)
     uart_puts(buff);
     uart_puts("\r\n");
 #endif
-/*
-    if (buf[0] == 0x47)
-    {
-        PORTA |= (1<<RELAY_PIN);
-        BLOCKM_STAT |= (1<<0);
-    }
-    if (buf[0] == 0x00)
-    {
-        PORTA &= ~(1<<RELAY_PIN);
-        BLOCKM_STAT &=~ (1<<0);
-    }
-*/
+
     if (buf[1] & (1<<0))
     {
         BLOCKM_STAT |= (1<<0);
 
-        if( (buf[1] & (1<<1))
-            | (buf[1] & (1<<2))
-            | (buf[1] & (1<<3))
-          )
+        if( (buf[1] & (1<<1)) )
         {
-           TIMSK |= (1<<TOIE0);
-           BLOCKM_STAT |= (1<<1);
+            PORTA |= (1<<RELAY_L_PIN);
+            BLOCKM_STAT |= (1<<1);
         }
         else
         {
-            TIMSK &=~ (1<<TOIE0);
-            PORTA |= (1<<RELAY_PIN);
+            PORTA &=~ (1<<RELAY_L_PIN);
             BLOCKM_STAT &=~ (1<<1);
+        }
+
+        if ( (buf[1] & (1<<2)) )
+        {
+            PORTA |= (1<<RELAY_R_PIN);
+            BLOCKM_STAT |= (1<<2);
+        }
+        else
+        {
+            PORTA &=~ (1<<RELAY_R_PIN);
+            BLOCKM_STAT &=~ (1<<2);
+        }
+
+        if ( (buf[1] & (1<<3)) )
+        {
+            PORTA |= (1<<RELAY_L_PIN);
+            PORTA |= (1<<RELAY_R_PIN);
+            BLOCKM_STAT |= (1<<3);
+        }
+        else
+        {
+            PORTA &=~ (1<<RELAY_L_PIN);
+            PORTA &=~ (1<<RELAY_R_PIN);
+            BLOCKM_STAT &=~ (1<<3);
         }
     }
     else
     {
-        TIMSK &=~ (1<<TOIE0);
-        PORTA &= ~(1<<RELAY_PIN);
+        PORTA &=~ (1<<RELAY_R_PIN);
+        PORTA &=~ (1<<RELAY_L_PIN);
         BLOCKM_STAT &=~ (1<<0);
+        BLOCKM_STAT &=~ (1<<1);
+        BLOCKM_STAT &=~ (1<<2);
     }
     // Если предполагается немедленная отправка ответа, то необходимо обеспечить задержку ,
     // во время которой чип отправит подтверждение о приёме 
@@ -334,7 +345,7 @@ void on_packet(uint8_t * buf, uint8_t size)
 
 void check_radio() 
 {
-    PORTA &= ~(1<<BLINK_PIN);
+    PORTA &=~ (1<<BLINK_PIN);
 
     if (!radio_is_interrupt()) // Если прерывания нет, то не задерживаемся
         return;
@@ -398,28 +409,22 @@ ISR(TIMER1_COMPA_vect)
 }
 
 
-ISR(TIMER0_OVF_vect)
-{
-    blink_daylights++;
-}
-
-//ISR(TIMER1_COMPA_vect, ISR_ALIASOF(TIMER0_COMPA_vect));
-
 int main(void) 
 {
     DDRA |= 1<<3;
     DDRA |= 1<<4;
     PORTA |= 1<<BLINK_PIN;
-    PORTA &= ~(1<<RELAY_PIN);
+    PORTA &=~ (1<<RELAY_L_PIN);
+    PORTA &=~ (1<<RELAY_R_PIN);
 
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK |= (1 << OCIE1A); // enable the CTC interrupt
 
     // timer0 code
     //TIMSK |= 1<<TOIE0;
-    OCR0 = 0xFF;
-    TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
-    TCCR0 |= (1<<CS02) | (1<<CS00);
+    // OCR0 = 0xFF;
+    // TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
+    // TCCR0 |= (1<<CS02) | (1<<CS00);
     // timer0 end code
 
     sei();
@@ -451,12 +456,8 @@ int main(void)
         if(radio_delay >= 70)
         {
             radio_delay = 0;
-            PORTA &= ~(1<<RELAY_PIN);
-        }
-        if(blink_daylights >= 35)
-        {
-            blink_daylights = 0;
-            PORTA ^= (1<<RELAY_PIN);
+            PORTA &=~ (1<<RELAY_L_PIN);
+            PORTA &=~ (1<<RELAY_R_PIN);
         }
     }
 }
