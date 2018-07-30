@@ -280,43 +280,47 @@ void on_packet(uint8_t * buf, uint8_t size)
     uart_puts("\r\n");
 #endif
 
+    
+
     if (buf[1] & (1<<0))
     {
         BLOCKM_STAT |= (1<<0);
+        BLOCKM_STAT &=~ (1<<1);
+        BLOCKM_STAT &=~ (1<<2);
+        BLOCKM_STAT &=~ (1<<3);
 
-        if( (buf[1] & (1<<1)) )
-        {
-            PORTA |= (1<<RELAY_L_PIN);
-            BLOCKM_STAT |= (1<<1);
-        }
-        else
+        if ( buf[1] & (1<<3) )
         {
             PORTA &=~ (1<<RELAY_L_PIN);
-            BLOCKM_STAT &=~ (1<<1);
-        }
-
-        if ( (buf[1] & (1<<2)) )
-        {
-            PORTA |= (1<<RELAY_R_PIN);
-            BLOCKM_STAT |= (1<<2);
-        }
-        else
-        {
             PORTA &=~ (1<<RELAY_R_PIN);
-            BLOCKM_STAT &=~ (1<<2);
-        }
-
-        if ( (buf[1] & (1<<3)) )
-        {
-            PORTA |= (1<<RELAY_L_PIN);
-            PORTA |= (1<<RELAY_R_PIN);
             BLOCKM_STAT |= (1<<3);
         }
+        else if (( buf[1] & (1<<1) ) | ( buf[1] & (1<<2) ))
+        {
+            if( buf[1] & (1<<1) )
+            {
+                PORTA &=~ (1<<RELAY_L_PIN);
+                BLOCKM_STAT |= (1<<1);
+            }
+            else
+            {
+                PORTA |= (1<<RELAY_L_PIN);
+            }
+
+            if ( buf[1] & (1<<2) )
+            {
+                PORTA &=~ (1<<RELAY_R_PIN);
+                BLOCKM_STAT |= (1<<2);
+            }
+            else
+            {
+                PORTA |= (1<<RELAY_R_PIN);
+            }
+        }
         else
         {
-            PORTA &=~ (1<<RELAY_L_PIN);
-            PORTA &=~ (1<<RELAY_R_PIN);
-            BLOCKM_STAT &=~ (1<<3);
+            PORTA |= (1<<RELAY_L_PIN);
+            PORTA |= (1<<RELAY_R_PIN);
         }
     }
     else
@@ -333,14 +337,18 @@ void on_packet(uint8_t * buf, uint8_t size)
     // 130мкс + ((длина_адреса + длина_CRC + длина_данных_подтверждения) * 8 + 17) / скорость_обмена
     // При типичных условиях и частоте МК 8 мГц достаточно 
     // дополнительной задержки 100мкс
-    _delay_us(200);    
-    char payload_send[16] = {
+    _delay_us(100);    
+    char payload_send[32] = {
                                 BLOCKM_STAT,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
+                                ,0x00,0x00,0x00,0x00
+                                ,0x00,0x00,0x00,0x00
+                                ,0x00,0x00,0x00,0x00
+                                ,0x00,0x00,0x00,0x00
                             };
-    send_data(payload_send, 16);
+    send_data(payload_send, 32);
 }
 
 void check_radio() 
@@ -411,9 +419,9 @@ ISR(TIMER1_COMPA_vect)
 
 int main(void) 
 {
-    DDRA |= 1<<3;
-    DDRA |= 1<<4;
-    PORTA |= 1<<BLINK_PIN;
+    DDRA |= 1<<BLINK_PIN;
+    DDRA |= (1<<RELAY_L_PIN)|(1<<RELAY_R_PIN);
+    PORTA &=~ 1<<BLINK_PIN;
     PORTA &=~ (1<<RELAY_L_PIN);
     PORTA &=~ (1<<RELAY_R_PIN);
 

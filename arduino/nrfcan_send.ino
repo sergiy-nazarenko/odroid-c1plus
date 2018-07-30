@@ -40,11 +40,6 @@ static int uart_putchar(char c, FILE *stream)
 const int RF_CS_PIN = 9;
 RF24 radio(RF_CS_PIN, 10);
 
-// sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
-// Leave open to be the 'ping' transmitter
-const int role_pin = 5;
-
-
 //
 // Topology
 //
@@ -52,11 +47,7 @@ const int role_pin = 5;
 // Radio pipe addresses for the 2 nodes to communicate.
 const uint64_t pipes[2] = { 0xA0A0A0A0A0LL, 0xD0D0D0D0D0LL };
 
-const int min_payload_size = 4;
 const int max_payload_size = 32;
-const int payload_size_increments_by = 1;
-int next_payload_size = min_payload_size;
-
 char receive_payload[max_payload_size+1]; // +1 to allow room for a terminating NULL char
 
 const int SPI_CS_PIN = 4;
@@ -66,12 +57,12 @@ MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 unsigned char flagRecv = 0;
 unsigned char can_msg_len = 0;
 unsigned char can_msg_buf[8];
-
+unsigned int payload_size = 4;
+ 
 unsigned char flag_send_counter = 0;
 unsigned char flag_send = 3;
 
 char send_payload[4] = {0x00,0x00,0x00,0x00};
-
 
 void MCP2515_ISR()
 {
@@ -80,7 +71,6 @@ void MCP2515_ISR()
 
 void setup(void)
 {
-
 #ifdef MDEBUG
   Serial.begin(9600);
 #endif
@@ -99,7 +89,7 @@ void setup(void)
 #endif
         delay(100);
     }
-    delay(500);
+    delay(250);
 #ifdef MDEBUG  
     Serial.println("CAN BUS Shield init ok!");
 #endif
@@ -114,19 +104,11 @@ void setup(void)
   CAN.init_Filt(1, 0, 0x350);                          // there is filter in mcp2515
   CAN.init_Filt(2, 0, 0x260);                          // there is filter in mcp2515
   delay(100);
-  // Role
-  //
-  // set up the role pin
-  pinMode(role_pin, INPUT);
-  digitalWrite(role_pin,HIGH);//HIGH);
-  delay(20); // Just to get a solid reading on the role pin
   
 #ifdef MDEBUG
   fdev_setup_stream(&uartout, uart_putchar, NULL, _FDEV_SETUP_WRITE);
   stdout = &uartout;
-  
   Serial.println(F("RF24/examples/pingpair_dyn/"));
- 
 #endif
   //
   // Setup and configure rf radio
@@ -145,8 +127,6 @@ void setup(void)
   
   //
   // Open pipes to other nodes for communication
-  //
-
   // This simple sketch opens two pipes for these two nodes to communicate
   // back and forth.
   // Open 'our' pipe for writing
@@ -168,15 +148,11 @@ void setup(void)
 
 void loop(void)
 {
-  //
-  // Ping out role.  Repeatedly send the current time
-  //
    unsigned char len = 0;
    unsigned char buf[8];
 
     // The payload will always be the same, what will change is how much of it we send.
-    unsigned int payload_size = 4;
-    //if(flagRecv)                   // check if get data
+  
     if(CAN_MSGAVAIL == CAN.checkReceive())
     {
         //flagRecv = 0;                // clear flag
@@ -229,6 +205,7 @@ void loop(void)
               send_payload[1] &=~ (1<<0);
           }
         }
+        
         if(CAN.getCanId() == 0x260)
         {
           digitalWrite(WHITE_LED, HIGH);
@@ -252,14 +229,8 @@ void loop(void)
               digitalWrite(YELLOW_LED, LOW);
               send_payload[1] &=~ (1<<3);
           }
-          
-        }
-        
+        }      
     }// if can.checkrecieve
-    /*else
-    {
-        flag_send_counter = 0;
-    }*/
     
     // First, stop listening so we can talk.
     radio.stopListening();
@@ -274,7 +245,6 @@ void loop(void)
 
     // Now, continue listening
     radio.startListening();
-
     // Wait here until we get a response, or timeout
     unsigned long started_waiting_at = millis();
     bool timeout = false;
@@ -320,6 +290,6 @@ void loop(void)
     }
     // Update size for next time.    
     // Try again 1s later
-    delay(500);
+    delay(250);
 }
 // vim:cin:ai:sts=2 sw=2 ft=cpp
