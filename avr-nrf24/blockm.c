@@ -33,11 +33,12 @@ uint8_t spi_send_recv(uint8_t data)
 #define RADIO_PORT PORTB
 #define RADIO_DDR DDRB
 #define RADIO_PIN PINB
-
 #define RADIO_CSN 4
 #define RADIO_CE 3
 #define RADIO_IRQ 2
 
+
+#define RELAY_PORT PORTA
 #define RELAY_R_PIN 4
 #define RELAY_L_PIN 5
 #define BLINK_PIN 3
@@ -264,7 +265,7 @@ volatile uint8_t radio_delay = 0;
 void on_packet(uint8_t * buf, uint8_t size) 
 {
     // TODO здесь нужно написать обработчик принятого пакета
-    PORTA |= (1<<BLINK_PIN);
+    RELAY_PORT |= (1<<BLINK_PIN);
     radio_delay = 0;
 
 #ifdef MDEBUG    
@@ -291,47 +292,38 @@ void on_packet(uint8_t * buf, uint8_t size)
 
         if ( buf[1] & (1<<3) )
         {
-            PORTA &=~ (1<<RELAY_L_PIN);
-            PORTA &=~ (1<<RELAY_R_PIN);
+            RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
+            RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON
             BLOCKM_STAT |= (1<<3);
         }
-        else if (( buf[1] & (1<<1) ) | ( buf[1] & (1<<2) ))
+        else if( buf[1] & (1<<1) )
         {
-            if( buf[1] & (1<<1) )
-            {
-                PORTA &=~ (1<<RELAY_L_PIN);
-                BLOCKM_STAT |= (1<<1);
-            }
-            else
-            {
-                PORTA |= (1<<RELAY_L_PIN);
-            }
-
-            if ( buf[1] & (1<<2) )
-            {
-                PORTA &=~ (1<<RELAY_R_PIN);
-                BLOCKM_STAT |= (1<<2);
-            }
-            else
-            {
-                PORTA |= (1<<RELAY_R_PIN);
-            }
+            RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
+            RELAY_PORT |= (1<<RELAY_R_PIN); // OFF
+            BLOCKM_STAT |= (1<<1);
+        }
+        else if ( buf[1] & (1<<2) )
+        {
+            RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON 
+            RELAY_PORT |= (1<<RELAY_L_PIN); // OFF
+            BLOCKM_STAT |= (1<<2);
         }
         else
         {
-            PORTA |= (1<<RELAY_L_PIN);
-            PORTA |= (1<<RELAY_R_PIN);
+            RELAY_PORT |= (1<<RELAY_L_PIN); // OFF
+            RELAY_PORT |= (1<<RELAY_R_PIN); // OFF
         }
     }
     else
     {
-        PORTA &=~ (1<<RELAY_R_PIN);
-        PORTA &=~ (1<<RELAY_L_PIN);
+        RELAY_PORT &=~ (1<<RELAY_R_PIN);
+        RELAY_PORT &=~ (1<<RELAY_L_PIN);
         BLOCKM_STAT &=~ (1<<0);
         BLOCKM_STAT &=~ (1<<1);
         BLOCKM_STAT &=~ (1<<2);
     }
-    // Если предполагается немедленная отправка ответа, то необходимо обеспечить задержку ,
+    // Если предполагается немедленная отправка ответа, то необходимо 
+    // обеспечить задержку ,
     // во время которой чип отправит подтверждение о приёме 
     // чтобы с момента приёма пакета до перевода в режим PTX прошло:
     // 130мкс + ((длина_адреса + длина_CRC + длина_данных_подтверждения) * 8 + 17) / скорость_обмена
@@ -353,7 +345,7 @@ void on_packet(uint8_t * buf, uint8_t size)
 
 void check_radio() 
 {
-    PORTA &=~ (1<<BLINK_PIN);
+    RELAY_PORT &=~ (1<<BLINK_PIN);
 
     if (!radio_is_interrupt()) // Если прерывания нет, то не задерживаемся
         return;
@@ -421,9 +413,9 @@ int main(void)
 {
     DDRA |= 1<<BLINK_PIN;
     DDRA |= (1<<RELAY_L_PIN)|(1<<RELAY_R_PIN);
-    PORTA &=~ 1<<BLINK_PIN;
-    PORTA &=~ (1<<RELAY_L_PIN);
-    PORTA &=~ (1<<RELAY_R_PIN);
+    RELAY_PORT &=~ 1<<BLINK_PIN;
+    RELAY_PORT &=~ (1<<RELAY_L_PIN);
+    RELAY_PORT &=~ (1<<RELAY_R_PIN);
 
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK |= (1 << OCIE1A); // enable the CTC interrupt
@@ -464,8 +456,8 @@ int main(void)
         if(radio_delay >= 70)
         {
             radio_delay = 0;
-            PORTA &=~ (1<<RELAY_L_PIN);
-            PORTA &=~ (1<<RELAY_R_PIN);
+            RELAY_PORT &=~ (1<<RELAY_L_PIN);
+            RELAY_PORT &=~ (1<<RELAY_R_PIN);
         }
     }
 }
