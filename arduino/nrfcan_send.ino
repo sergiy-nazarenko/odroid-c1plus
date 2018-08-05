@@ -26,6 +26,9 @@
 #define BLUE_LED 5
 #define WHITE_LED 7
 #define YELLOW_LED 6
+const int RF_CS_PIN = 9;
+const int SPI_CS_PIN = 4;
+
 
 #ifdef MDEBUG
 static FILE uartout = {0};
@@ -37,7 +40,6 @@ static int uart_putchar(char c, FILE *stream)
 #endif
 
 // Set up nRF24L01 radio on SPI bus plus pins 7 & 8
-const int RF_CS_PIN = 9;
 RF24 radio(RF_CS_PIN, 10);
 
 //
@@ -49,8 +51,6 @@ const uint64_t pipes[2] = { 0xA0A0A0A0A0LL, 0xD0D0D0D0D0LL };
 
 const int max_payload_size = 32;
 char receive_payload[max_payload_size+1]; // +1 to allow room for a terminating NULL char
-
-const int SPI_CS_PIN = 4;
 
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
@@ -157,82 +157,65 @@ void loop(void)
     {
         //flagRecv = 0;                // clear flag
         CAN.readMsgBuf(&can_msg_len, can_msg_buf);    // read data,  len: data length, buf: data buf
-        if(CAN.getCanId() == 0x450)
+        switch(CAN.getCanId())
         {
-            digitalWrite(WHITE_LED, HIGH);
-#ifdef MDEBUG        
-            Serial.println("\r\n-----------");
-            Serial.print("Get Data From id: 0x");
-            Serial.print(CAN.getCanId(),HEX);
-            Serial.println();
-            Serial.print(" ");
-            Serial.print(can_msg_len);
-            Serial.print(" ");
-#endif
-            if (can_msg_len == 4 && flag_send_counter >= flag_send)
-              send_payload[0] = can_msg_buf[3];
-            
-            if (send_payload[0] != can_msg_buf[3])
-                flag_send_counter++;
+          case 0x350:
+            if ( can_msg_buf[0] & (1<<2) )
+                send_payload[1] |= (1<<0);
             else
-                flag_send_counter = 0;
-            
-            if (send_payload[0] == 0x47)
-              digitalWrite(BLUE_LED, HIGH);         
-            else
-              digitalWrite(BLUE_LED, LOW);         
-        
-#ifdef MDEBUG
-            for(int i = 0; i<can_msg_len; i++)    // print the data
-            {
-                Serial.print("0x");
-                Serial.print(can_msg_buf[i], HEX);
-                Serial.print(" ");
-            }
-            Serial.println();
-#endif
-        }// if can.getid() == 450
-        if(CAN.getCanId() == 0x350) 
-        {
-          if ( can_msg_buf[0] & (1<<2) )
-          {
-              digitalWrite(BLUE_LED, HIGH);
-              send_payload[1] |= (1<<0);
-          }
-          else
-          {
-              digitalWrite(BLUE_LED, LOW);
-              send_payload[1] &=~ (1<<0);
-          }
-        }
-        
-        if(CAN.getCanId() == 0x260)
-        {
-          digitalWrite(WHITE_LED, HIGH);
-          if ( can_msg_buf[0] == 0b00100101 )
-              send_payload[1] |= (1<<1);
-          else
-              send_payload[1] &=~ (1<<1);
-
-          if ( can_msg_buf[0] == 0b00111010 )
-              send_payload[1] |= (1<<2);
-          else
-              send_payload[1] &=~ (1<<2);
-
-          if ( can_msg_buf[0] == 0b00011111 )
-          {
-              digitalWrite(YELLOW_LED, HIGH);
-              send_payload[1] |= (1<<3);
-          }
-          else
-          {
-              digitalWrite(YELLOW_LED, LOW);
-              send_payload[1] &=~ (1<<3);
-          }
-        }      
+                send_payload[1] &=~ (1<<0);
+            break;
+          case 0x260:
+            send_payload[1] &=~ (1<<1);
+            send_payload[1] &=~ (1<<2);
+            send_payload[1] &=~ (1<<3);
+            if ( can_msg_buf[0] == 0b00100101 )
+                send_payload[1] |= (1<<1);
+            if ( can_msg_buf[0] == 0b00111010 )
+                send_payload[1] |= (1<<2);
+            if ( can_msg_buf[0] == 0b00011111 )
+                send_payload[1] |= (1<<3);
+            break;
+          default:
+            break;
+        }// switch
     }// if can.checkrecieve
     
-    // First, stop listening so we can talk.
+    
+    
+    if (send_payload[1] & (1<<0))
+    {
+        digitalWrite(BLUE_LED, HIGH);
+              
+        if ( send_payload[1] & (1<<3) )
+        {
+            digitalWrite(WHITE_LED, HIGH); // ON
+            digitalWrite(YELLOW_LED, HIGH); // ON
+        }
+        else if( send_payload[1] & (1<<1) )
+        {
+            digitalWrite(WHITE_LED, HIGH); // ON
+            digitalWrite(YELLOW_LED, LOW); // OFF
+        }
+        else if ( send_payload[1] & (1<<2) )
+        {
+            digitalWrite(WHITE_LED, LOW); // OFF
+            digitalWrite(YELLOW_LED, HIGH); // ON
+        }
+        else
+        {
+            digitalWrite(WHITE_LED, LOW); // OFF
+            digitalWrite(YELLOW_LED, LOW); // OFF
+        }
+    }
+    else
+    {
+      digitalWrite(BLUE_LED, LOW); // OFF
+      digitalWrite(WHITE_LED, LOW); // OFF
+      digitalWrite(YELLOW_LED, LOW); // OFF  
+    }
+    
+       // First, stop listening so we can talk.
     radio.stopListening();
 
     // Take the time, and send it.  This will block until complete
@@ -242,6 +225,8 @@ void loop(void)
 #endif
     radio.flush_tx();
     radio.write( send_payload, payload_size );
+    return;
+ 
 
     // Now, continue listening
     radio.startListening();
@@ -251,8 +236,7 @@ void loop(void)
     while ( ! radio.available() && ! timeout )
       if (millis() - started_waiting_at > 500 )
         timeout = true;
-    digitalWrite(WHITE_LED, LOW);
-    digitalWrite(BLUE_LED, LOW);
+    //digitalWrite(BLUE_LED, LOW);
     
     // Describe the results
     if ( timeout )

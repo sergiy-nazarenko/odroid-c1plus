@@ -198,7 +198,8 @@ uint8_t radio_start()
     radio_writereg(RF_CH, chan); // Выбор частотного канала
     radio_writereg(RF_SETUP, RF_SETUP_1MBPS | RF_SETUP_0DBM); // выбор скорости 1 Мбит/с и мощности 0dBm
 
-    radio_writereg_buf(RX_ADDR_P0, &remote_addr[0], 5); // Подтверждения приходят на канал 0 
+    radio_writereg_buf(RX_ADDR_P0, &remote_addr[0], 5); 
+    // Подтверждения приходят на канал 0 
     radio_writereg_buf(TX_ADDR, &remote_addr[0], 5);
 
     radio_writereg_buf(RX_ADDR_P1, &self_addr[0], 5);
@@ -237,8 +238,10 @@ uint8_t send_data(uint8_t * buf, uint8_t size)
 #endif
         return 0; 
     }
-    uint8_t status = radio_writereg(CONFIG, conf & ~(1 << PRIM_RX)); // Сбрасываем бит PRIM_RX
-    if (status & (1 << TX_FULL_STATUS))  // Если очередь передатчика заполнена, возвращаемся с ошибкой
+    uint8_t status = radio_writereg(CONFIG, conf & ~(1 << PRIM_RX)); 
+    // Сбрасываем бит PRIM_RX
+    if (status & (1 << TX_FULL_STATUS))  
+    // Если очередь передатчика заполнена, возвращаемся с ошибкой
     {
 
 #ifdef MDEBUG    
@@ -252,7 +255,7 @@ uint8_t send_data(uint8_t * buf, uint8_t size)
 #endif
     radio_write_buf(W_TX_PAYLOAD, buf, size); // Запись данных на отправку
     radio_assert_ce(); // Импульс на линии CE приведёт к началу передачи
-    _delay_us(15); // Нужно минимум 10мкс, возьмём с запасом
+    _delay_us(30); // Нужно минимум 10мкс, возьмём с запасом
     radio_deassert_ce();
     return 1;
 }
@@ -329,7 +332,7 @@ void on_packet(uint8_t * buf, uint8_t size)
     // 130мкс + ((длина_адреса + длина_CRC + длина_данных_подтверждения) * 8 + 17) / скорость_обмена
     // При типичных условиях и частоте МК 8 мГц достаточно 
     // дополнительной задержки 100мкс
-    _delay_us(100);    
+    _delay_us(200);    
     char payload_send[32] = {
                                 BLOCKM_STAT,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
