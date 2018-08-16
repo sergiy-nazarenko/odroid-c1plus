@@ -6,10 +6,17 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#include <i2c/i2cmaster.h>
+
+#define MDEBUG 1
+
+#define DLY 80
+#define BB 250000
+
 
 #ifdef MDEBUG
     #include "uart/uart.h"
-    #define UART_BAUDRATE (F_CPU/16/9600)-1
+    #define UART_BAUDRATE (((F_CPU/(BB*16UL)))-1)
 #endif
 
 #define SPI_DDR DDRB
@@ -263,6 +270,13 @@ uint8_t send_data(uint8_t * buf, uint8_t size)
 volatile unsigned char BLOCKM_STAT = 0;
 volatile uint8_t radio_delay = 0;
 
+int fs_timer0_overflow_count;
+volatile int fs_pulse_count = 0;
+int fs_total_pulse_count = 0;
+int fs_num_seconds = 0;
+volatile int fs_liters;
+int storage_flowmeter = 0;
+
 // Вызывается при получении нового пакета по каналу 1 от удалённой стороны.
 // buf - буфер с данными, size - длина данных (от 1 до 32)
 void on_packet(uint8_t * buf, uint8_t size) 
@@ -283,8 +297,6 @@ void on_packet(uint8_t * buf, uint8_t size)
     uart_puts(buff);
     uart_puts("\r\n");
 #endif
-
-    
 
     if (buf[1] & (1<<0))
     {
@@ -351,7 +363,12 @@ void check_radio()
     RELAY_PORT &=~ (1<<BLINK_PIN);
 
     if (!radio_is_interrupt()) // Если прерывания нет, то не задерживаемся
+    {
+#ifdef MDEBUG
+        uart_puts("no radio_is_interrupt\n");
+#endif
         return;
+    }
 
     uint8_t status = radio_cmd(NOP);
     radio_writereg(STATUS, status); // Просто запишем регистр обратно, тем самым сбросив биты прерываний
@@ -405,30 +422,76 @@ void check_radio()
     }
 }
 
+ISR(INT0_vect)
+{
+//    fs_pulse_count+=1;
+    fs_total_pulse_count+=1;
+}
+
+ISR(TIMER0_OVF_vect)
+{
+    fs_timer0_overflow_count += 1;
+    if(fs_timer0_overflow_count==31250)
+    {
+        fs_timer0_overflow_count=0;
+        fs_liters+=(fs_total_pulse_count/450);
+        fs_pulse_count%=450;
+    }
+}
+
 
 ISR(TIMER1_COMPA_vect)
 {
     radio_delay++;
 }
 
+void flowsensor_init()
+{
+    DDRD &=~ (1<<DD2);
+    PORTD |= (1<<PIN2);
+    GICR |= (1<<INT0);
+    MCUCR |= (1<<ISC00)|(1<<ISC01);
+}
+
+#define DEV24C04 0xA0
 
 int main(void) 
 {
+    
+    UBRRH=(uint8_t)(UART_BAUDRATE>>8);
+    UBRRL=(uint8_t)(UART_BAUDRATE);
+    UCSRB=(1<<RXEN)|(1<<TXEN);
+    UCSRC=(1<<UCSZ0)|(1<<UCSZ1)|(1<<URSEL);
+
+    char c='a';
+    while(1)
+    {
+        UDR=c++;
+        if(c>'z'){break;}//c='a';}
+        _delay_us(DLY);
+    }
+    
+    flowsensor_init();
+    i2c_init();
+
     DDRA |= 1<<BLINK_PIN;
     DDRA |= (1<<RELAY_L_PIN)|(1<<RELAY_R_PIN);
     RELAY_PORT &=~ 1<<BLINK_PIN;
     RELAY_PORT &=~ (1<<RELAY_L_PIN);
     RELAY_PORT &=~ (1<<RELAY_R_PIN);
 
+    DDRC &=~ (1<<3);
+    DDRC &=~ (1<<4);
+
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK |= (1 << OCIE1A); // enable the CTC interrupt
 
     // timer0 code
-    //TIMSK |= 1<<TOIE0;
-    // OCR0 = 0xFF;
-    // TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
-    // TCCR0 |= (1<<CS02) | (1<<CS00);
-    // timer0 end code
+    TIMSK |= (1<<TOIE0);
+    OCR0 = 0xFF;
+    TCNT0 = 0x00; // 7812 // two times in seconds // 30 times of 256
+    TCCR0 |= (1<<CS02) | (1<<CS00);
+    //timer0 end code
 
     sei();
     OCR1A = 15625; // 16 000 000 / 1024 //This flag is set in the timer clock cycle after the counter 
@@ -437,6 +500,9 @@ int main(void)
     
 #ifdef MDEBUG    
     uart_init(UART_BAUDRATE);
+    uart_puts("UART INIT");
+    uart_puts("\r\n");
+
 #endif
 
     radio_init();
@@ -452,15 +518,46 @@ int main(void)
 
     radio_assert_ce();
 
+    
+    unsigned char ret;
+    i2c_start_wait(DEV24C04+I2C_WRITE);
+    i2c_write(0x05);
+    i2c_rep_start(DEV24C04+I2C_READ);
+    ret = i2c_readNak();
+    i2c_stop();
+    storage_flowmeter = 
+
+    char buff[100];
+    // while(1)
+    // {
+    //     UDR=ret;
+    //     //if(c>'z'){break;}//c='a';}
+    //     _delay_us(DLY);
+    // }
+        
     for(;;) 
     {
         check_radio();
-  
+
         if(radio_delay >= 70)
         {
             radio_delay = 0;
             RELAY_PORT &=~ (1<<RELAY_L_PIN);
             RELAY_PORT &=~ (1<<RELAY_R_PIN);
+        }
+        if (fs_timer0_overflow_count == )
+        {
+            if(fs_total_pulse_count > storage_flowmeter)
+            {
+                // i2c_start_wait(DEV24C04+I2C_WRITE);
+                // i2c_write(0x05);
+                // i2c_write(0x75);
+                // i2c_stop();
+            }
+            sprintf(buff, "total pulse count: %d %c \n", fs_total_pulse_count, ret );  
+            uart_puts(buff);
+            memset(buff,'0',100);
+
         }
     }
 }
