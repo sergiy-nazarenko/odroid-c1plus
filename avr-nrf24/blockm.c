@@ -6,12 +6,16 @@
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
+#include <ds18b20/ds18b20.h>
+#include <ds18b20/romsearch.h>
 #include <i2c/i2cmaster.h>
 
 #define MDEBUG 1
 
 #define DLY 80
 #define BB 250000
+
+#define DEV24C04 0xA0
 
 
 #ifdef MDEBUG
@@ -27,7 +31,7 @@
 void spi_init()
 {
     SPI_DDR |= (1<<SPI_MOSI) | (1<<SPI_SCK) | (1<<SPI_SS);
-    SPCR = (1<<SPE) | (1<<MSTR);
+    SPCR = (1<<SPE) | (1<<MSTR) | (1<<SPI2X);
 }
 
 uint8_t spi_send_recv(uint8_t data)
@@ -49,6 +53,23 @@ uint8_t spi_send_recv(uint8_t data)
 #define RELAY_R_PIN 4
 #define RELAY_L_PIN 5
 #define BLINK_PIN 3
+
+
+volatile unsigned char BLOCKM_STAT = 0;
+volatile uint8_t radio_delay = 0;
+
+uint16_t fs_timer0_overflow_count;
+// volatile int fs_pulse_count = 0;
+uint16_t fs_total_pulse_count = 0;
+// int fs_num_seconds = 0;
+// volatile int fs_liters;
+uint16_t storage_flowmeter = 0;
+
+uint8_t hi = 0;
+uint8_t lo = 0;
+
+uint8_t t1_hi = 0;
+uint8_t t1_lo = 0;
 
 // Выбирает активное состояние (высокий уровень) на линии CE
 inline void radio_assert_ce() 
@@ -90,10 +111,14 @@ void radio_init()
 uint8_t radio_read_buf(uint8_t cmd, uint8_t * buf, uint8_t count) 
 {
   csn_assert();
+  // _delay_us(20);
+
   uint8_t status = spi_send_recv(cmd);
+  _delay_us(20);
   while (count--) {
     *(buf++) = spi_send_recv(0xFF);
   }
+  _delay_us(20);
   csn_deassert();
   return status;
 }
@@ -103,10 +128,12 @@ uint8_t radio_read_buf(uint8_t cmd, uint8_t * buf, uint8_t count)
 uint8_t radio_write_buf(uint8_t cmd, uint8_t * buf, uint8_t count) 
 {
     csn_assert();
+    _delay_us(20);
     uint8_t status = spi_send_recv(cmd);
     while (count--) {
         spi_send_recv(*(buf++));
     }
+    _delay_us(20);
     csn_deassert();
     return status;
 }
@@ -116,8 +143,12 @@ uint8_t radio_write_buf(uint8_t cmd, uint8_t * buf, uint8_t count)
 uint8_t radio_readreg(uint8_t reg) 
 {
     csn_assert();
+  _delay_us(20);
+
     spi_send_recv((reg & 31) | R_REGISTER);
     uint8_t answ = spi_send_recv(0xFF);
+  _delay_us(20);
+    
     csn_deassert();
     return answ;
 }
@@ -127,8 +158,11 @@ uint8_t radio_readreg(uint8_t reg)
 uint8_t radio_writereg(uint8_t reg, uint8_t val) 
 {
   csn_assert();
+  _delay_us(20);
   uint8_t status = spi_send_recv((reg & 31) | W_REGISTER);
   spi_send_recv(val);
+  _delay_us(20);
+
   csn_deassert();
   return status;
 }
@@ -159,7 +193,9 @@ uint8_t radio_read_rx_payload_width()
 uint8_t radio_cmd(uint8_t cmd) 
 {
   csn_assert();
+  _delay_us(20);
   uint8_t status = spi_send_recv(cmd);
+  _delay_us(20);
   csn_deassert();
   return status;
 }
@@ -175,7 +211,7 @@ uint8_t radio_is_interrupt() {
 // использовать этот вариант только в крайних случаях!!!
   return (radio_cmd(NOP) & ((1 << RX_DR) | (1 << TX_DS) | (1 << MAX_RT))) ? 1 : 0;
 }
-*/
+/**/
 
 // Функция производит первоначальную настройку устройства. 
 // Возвращает 1, в случае успеха, 0 в случае ошибки
@@ -198,10 +234,12 @@ uint8_t radio_start()
         _delay_ms(1);
     }
 
-    radio_writereg(EN_AA, (1 << ENAA_P0) ); // включение автоподтверждения только по каналу 0
-    radio_writereg(EN_RXADDR, (1 << ERX_P0)|(1 << ERX_P1) ); // включение каналов 0 и 1
+    radio_writereg(EN_AA, (1 << ENAA_P1) ); 
+    // включение автоподтверждения только по каналу 0
+    radio_writereg(EN_RXADDR, (1 << ERX_P0)|(1 << ERX_P1) ); 
+    // включение каналов 0 и 1
     radio_writereg(SETUP_AW, SETUP_AW_5BYTES_ADDRESS); // выбор длины адреса 5 байт
-    radio_writereg(SETUP_RETR, SETUP_RETR_DELAY_1000MKS | SETUP_RETR_UP_TO_5_RETRANSMIT); 
+    radio_writereg(SETUP_RETR, SETUP_RETR_DELAY_1500MKS | SETUP_RETR_UP_TO_5_RETRANSMIT); 
     radio_writereg(RF_CH, chan); // Выбор частотного канала
     radio_writereg(RF_SETUP, RF_SETUP_1MBPS | RF_SETUP_0DBM); // выбор скорости 1 Мбит/с и мощности 0dBm
 
@@ -211,12 +249,14 @@ uint8_t radio_start()
 
     radio_writereg_buf(RX_ADDR_P1, &self_addr[0], 5);
 
-    radio_writereg(RX_PW_P0, 32);
-    //radio_writereg(RX_PW_P1, 0); 
-    radio_writereg(DYNPD, (1 << DPL_P0)|(1 << DPL_P1)); // включение произвольной длины для каналов 0 и 1
+    radio_writereg(RX_PW_P0, 0);
+    radio_writereg(RX_PW_P1, 32); 
+    radio_writereg(DYNPD, (1 << DPL_P0)|(1 << DPL_P1)); 
+    // включение произвольной длины для каналов 0 и 1
     radio_writereg(FEATURE, 0x04); // разрешение произвольной длины пакета данных
 
-    radio_writereg(CONFIG, (1 << EN_CRC) | (1 << CRCO) | (1 << PWR_UP) | (1 << PRIM_RX)); // Включение питания
+    radio_writereg(CONFIG, (1 << EN_CRC) | (1 << CRCO) | (1 << PWR_UP) | (1 << PRIM_RX)); 
+    // Включение питания
     return (radio_readreg(CONFIG) == ((1 << EN_CRC) | (1 << CRCO) | (1 << PWR_UP) | (1 << PRIM_RX))) ? 1 : 0;
 }
 
@@ -224,10 +264,10 @@ uint8_t radio_start()
 // а подтверждение так и не было получено.
 void on_send_error() 
 {
- // TODO здесь можно описать обработчик неудачной отправки
+/* // TODO здесь можно описать обработчик неудачной отправки
 #ifdef MDEBUG    
     uart_puts("send failed...\n");
-#endif
+#endif*/
 }
 
 
@@ -236,46 +276,50 @@ void on_send_error()
 uint8_t send_data(uint8_t * buf, uint8_t size) 
 {
     radio_deassert_ce(); // Если в режиме приёма, то выключаем его 
+    _delay_us(20);
     uint8_t conf = radio_readreg(CONFIG);
     if (!(conf & (1 << PWR_UP))) // Если питание по какой-то причине отключено, возвращаемся с ошибкой
     {
-
+/*
 #ifdef MDEBUG    
         uart_puts("power is down..\n");
 #endif
-        return 0; 
+  */      return 0; 
     }
     uint8_t status = radio_writereg(CONFIG, conf & ~(1 << PRIM_RX)); 
+    _delay_us(50);
     // Сбрасываем бит PRIM_RX
     if (status & (1 << TX_FULL_STATUS))  
     // Если очередь передатчика заполнена, возвращаемся с ошибкой
     {
-
+/*
 #ifdef MDEBUG    
         uart_puts("queue is full..\n");
 #endif
-        return 0;
+  */      return 0;
     }
 
 #ifdef MDEBUG    
     uart_puts("try to send..\n");
 #endif
+    _delay_us(20); 
     radio_write_buf(W_TX_PAYLOAD, buf, size); // Запись данных на отправку
+    _delay_us(100);
     radio_assert_ce(); // Импульс на линии CE приведёт к началу передачи
-    _delay_us(30); // Нужно минимум 10мкс, возьмём с запасом
+    _delay_us(100); // Нужно минимум 10мкс, возьмём с запасом
     radio_deassert_ce();
+    _delay_us(50);
+    /*
+#ifdef MDEBUG  
+    status = radio_cmd(NOP);
+    if(status & (1 << MAX_RT))
+        uart_puts("maxrt!!..\n");
+    if(status & (1 << TX_DS))
+        uart_puts("send ok!!..\n");
+#endif*/
     return 1;
 }
 
-volatile unsigned char BLOCKM_STAT = 0;
-volatile uint8_t radio_delay = 0;
-
-int fs_timer0_overflow_count;
-volatile int fs_pulse_count = 0;
-int fs_total_pulse_count = 0;
-int fs_num_seconds = 0;
-volatile int fs_liters;
-int storage_flowmeter = 0;
 
 // Вызывается при получении нового пакета по каналу 1 от удалённой стороны.
 // buf - буфер с данными, size - длина данных (от 1 до 32)
@@ -284,20 +328,20 @@ void on_packet(uint8_t * buf, uint8_t size)
     // TODO здесь нужно написать обработчик принятого пакета
     RELAY_PORT |= (1<<BLINK_PIN);
     radio_delay = 0;
-
+/*
 #ifdef MDEBUG    
-    char buff[100];
+    char buff[size+1];
     char *mm = buff;
     for(int i =0 ; i < size; i++)
     {
-        sprintf(mm, "%04X ", buf[i]);
-        mm += 4;
+        sprintf(mm, "%d ", buf[i]);
+        mm += 1;
     }
-    buff[size*4] = '\0';
+    buff[size] = '\0';
     uart_puts(buff);
     uart_puts("\r\n");
 #endif
-
+*/
     if (buf[1] & (1<<0))
     {
         BLOCKM_STAT |= (1<<0);
@@ -337,6 +381,26 @@ void on_packet(uint8_t * buf, uint8_t size)
         BLOCKM_STAT &=~ (1<<1);
         BLOCKM_STAT &=~ (1<<2);
     }
+
+    if(buf[1] & (1<<4))
+    {
+        if(fs_total_pulse_count != 0)
+        {
+            i2c_start_wait(DEV24C04+I2C_WRITE);
+            i2c_write(0x05);
+            i2c_write(0x00);
+            i2c_stop();
+
+            i2c_start_wait(DEV24C04+I2C_WRITE);
+            i2c_write(0x06);
+            i2c_write(0x00);
+            i2c_stop();
+        }
+        hi = 0;
+        lo = 0;
+        storage_flowmeter = 0;
+        fs_total_pulse_count = 0;
+    }
     // Если предполагается немедленная отправка ответа, то необходимо 
     // обеспечить задержку ,
     // во время которой чип отправит подтверждение о приёме 
@@ -344,10 +408,10 @@ void on_packet(uint8_t * buf, uint8_t size)
     // 130мкс + ((длина_адреса + длина_CRC + длина_данных_подтверждения) * 8 + 17) / скорость_обмена
     // При типичных условиях и частоте МК 8 мГц достаточно 
     // дополнительной задержки 100мкс
-    _delay_us(200);    
+    _delay_us(260);    
     char payload_send[32] = {
-                                BLOCKM_STAT,0x00,0x00,0x00
-                                ,0x00,0x00,0x00,0x00
+                                BLOCKM_STAT,hi,lo,t1_hi
+                                ,t1_lo,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
                                 ,0x00,0x00,0x00,0x00
@@ -372,8 +436,8 @@ void check_radio()
     }
 
     uint8_t status = radio_cmd(NOP);
-    radio_writereg(STATUS, status); // Просто запишем регистр обратно, тем самым сбросив биты прерываний
-  
+    radio_writereg(STATUS, status); // Просто запишем регистр обратно, 
+                                    //тем самым сбросив биты прерываний
     if (status & ((1 << TX_DS) | (1 << MAX_RT))) 
     { // Завершена передача успехом, или нет,
         if (status & (1 << MAX_RT)) 
@@ -381,18 +445,34 @@ void check_radio()
             radio_cmd(FLUSH_TX); // Удалим последний пакет из очереди
             on_send_error(); // Вызовем обработчик
         } 
+        else
+        {
+#ifdef MDEBUG
+            uart_puts("##!\n");
+#endif
+        }
         
         if (!(radio_readreg(FIFO_STATUS) & (1 << TX_EMPTY))) 
         { // Если в очереди передатчика есть что передавать
+            /*
+#ifdef MDEBUG
+        uart_puts("want send..\n");
+#endif*/
             radio_assert_ce(); // Импульс на линии CE приведёт к началу передачи
-            _delay_us(15); // Нужно минимум 10мкс, возьмём с запасом
+            _delay_us(30); // Нужно минимум 10мкс, возьмём с запасом
             radio_deassert_ce();
         } 
         else 
         {
+
+#ifdef MDEBUG
+        uart_puts("nothing..\n");
+#endif
             uint8_t conf = radio_readreg(CONFIG);
             radio_writereg(CONFIG, conf | (1 << PRIM_RX)); // Устанавливаем бит PRIM_RX: приём
-            radio_assert_ce(); // Высокий уровень на линии CE переводит радио-чип в режим приёма
+            radio_assert_ce(); 
+           _delay_us(30);
+            // Высокий уровень на линии CE переводит радио-чип в режим приёма
         }
     }
     
@@ -400,10 +480,9 @@ void check_radio()
     while (((status & (7 << RX_P_NO)) != (7 << RX_P_NO)) && protect--) 
     { // Пока в очереди есть принятый пакет
         uint8_t l = radio_read_rx_payload_width(); // Узнаём длину пакета
-
 #ifdef MDEBUG    
         char buff[100];
-        sprintf(buff, "%d\n", l );  
+        sprintf(buff, "rx len: %d\n", l );  
         uart_puts(buff);
 #endif        
         if (l > 32) 
@@ -432,12 +511,12 @@ ISR(INT0_vect)
 ISR(TIMER0_OVF_vect)
 {
     fs_timer0_overflow_count += 1;
-    if(fs_timer0_overflow_count==31250)
-    {
-        fs_timer0_overflow_count=0;
-        fs_liters+=(fs_total_pulse_count/450);
-        fs_pulse_count%=450;
-    }
+    // if(fs_timer0_overflow_count==31250)
+    // {
+    //     fs_timer0_overflow_count=0;
+    //     fs_liters+=(fs_total_pulse_count/450);
+    //     fs_pulse_count%=450;
+    // }
 }
 
 
@@ -454,11 +533,11 @@ void flowsensor_init()
     MCUCR |= (1<<ISC00)|(1<<ISC01);
 }
 
-#define DEV24C04 0xA0
 
 int main(void) 
 {
-    
+ 
+#ifdef MDEBUG 
     UBRRH=(uint8_t)(UART_BAUDRATE>>8);
     UBRRL=(uint8_t)(UART_BAUDRATE);
     UCSRB=(1<<RXEN)|(1<<TXEN);
@@ -471,7 +550,11 @@ int main(void)
         if(c>'z'){break;}//c='a';}
         _delay_us(DLY);
     }
-    
+#endif
+    uint8_t roms[8 * 8]; //ROM buffer - we're expecting 8 sensors max and each ROM is 8 bytes long
+    uint8_t count; //The number of actually connected sensors
+    int k = ds18b20search( &PORTD, &DDRD, &PIND, ( 1 << 7 ), &count, roms, sizeof( roms ) );
+
     flowsensor_init();
     i2c_init();
 
@@ -501,9 +584,7 @@ int main(void)
     
 #ifdef MDEBUG    
     uart_init(UART_BAUDRATE);
-    uart_puts("UART INIT");
-    uart_puts("\r\n");
-
+    uart_puts("UART INIT\n");
 #endif
 
     radio_init();
@@ -519,15 +600,20 @@ int main(void)
 
     radio_assert_ce();
 
-    
-    unsigned char ret;
     i2c_start_wait(DEV24C04+I2C_WRITE);
     i2c_write(0x05);
     i2c_rep_start(DEV24C04+I2C_READ);
-    ret = i2c_readNak();
+    lo = i2c_readNak();
     i2c_stop();
-    storage_flowmeter = 0;
-
+    i2c_start_wait(DEV24C04+I2C_WRITE);
+    i2c_write(0x06);
+    i2c_rep_start(DEV24C04+I2C_READ);
+    hi = i2c_readNak();
+    i2c_stop();
+    fs_total_pulse_count = (lo << 8) | hi;
+    storage_flowmeter = fs_total_pulse_count;
+    
+#ifdef MDEBUG 
     char buff[100];
     // while(1)
     // {
@@ -535,9 +621,18 @@ int main(void)
     //     //if(c>'z'){break;}//c='a';}
     //     _delay_us(DLY);
     // }
-        
+#endif
+#ifdef MDEBUG    
+    sprintf(buff, "ds18b20[%d]: %02X %02X\n", k, roms[0], roms[0] );  
+    uart_puts(buff);
+    memset(buff,'0',100);
+#endif
+    uint16_t temperature1;
     for(;;) 
     {
+        lo = fs_total_pulse_count >> 8;
+        hi = fs_total_pulse_count;
+
         check_radio();
 
         if(radio_delay >= 70)
@@ -545,20 +640,38 @@ int main(void)
             radio_delay = 0;
             RELAY_PORT &=~ (1<<RELAY_L_PIN);
             RELAY_PORT &=~ (1<<RELAY_R_PIN);
+            //sprintf(buff, "overflow count: %02X %02X %d\n", hi, lo, fs_total_pulse_count );  
+            //uart_puts(buff);
+            //memset(buff,'0',100);
         }
-        if (fs_timer0_overflow_count == 500)
+        if (fs_timer0_overflow_count >= 500) //2441)
         {
-            if(fs_total_pulse_count > storage_flowmeter)
+            fs_timer0_overflow_count = 0;   
+           if(fs_total_pulse_count > storage_flowmeter)
             {
-                // i2c_start_wait(DEV24C04+I2C_WRITE);
-                // i2c_write(0x05);
-                // i2c_write(0x75);
-                // i2c_stop();
+                i2c_start_wait(DEV24C04+I2C_WRITE);
+                i2c_write(0x05);
+                i2c_write(lo);
+                i2c_stop();
+
+                i2c_start_wait(DEV24C04+I2C_WRITE);
+                i2c_write(0x06);
+                i2c_write(hi);
+                i2c_stop();
+
+                storage_flowmeter = fs_total_pulse_count;
             }
-            sprintf(buff, "total pulse count: %d %c \n", fs_total_pulse_count, ret );  
+            ds18b20convert( &PORTD, &DDRD, &PIND, ( 1 << 7 ), &roms[0] );
+            _delay_ms(2);
+            int m = ds18b20read( &PORTD, &DDRD, &PIND, ( 1 << 7 ), &roms[0], &temperature1 );
+            t1_lo = temperature1 >> 8;
+            t1_hi = temperature1;
+#ifdef MDEBUG 
+            // float tt = temperature1/16;
+            sprintf(buff, "flow: %02X %02X %d %d \n", hi, lo, storage_flowmeter, temperature1 );  
             uart_puts(buff);
             memset(buff,'0',100);
-
+#endif
         }
     }
 }
