@@ -366,6 +366,7 @@ void check_radio()
     {
 #ifdef MDEBUG
         uart_puts("no radio_is_interrupt\n");
+        _delay_ms(200);
 #endif
         return;
     }
@@ -525,7 +526,7 @@ int main(void)
     i2c_rep_start(DEV24C04+I2C_READ);
     ret = i2c_readNak();
     i2c_stop();
-    storage_flowmeter = 
+    storage_flowmeter = 0;
 
     char buff[100];
     // while(1)
@@ -545,7 +546,7 @@ int main(void)
             RELAY_PORT &=~ (1<<RELAY_L_PIN);
             RELAY_PORT &=~ (1<<RELAY_R_PIN);
         }
-        if (fs_timer0_overflow_count == )
+        if (fs_timer0_overflow_count == 500)
         {
             if(fs_total_pulse_count > storage_flowmeter)
             {
