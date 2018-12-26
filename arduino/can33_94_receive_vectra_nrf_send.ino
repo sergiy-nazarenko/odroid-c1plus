@@ -80,189 +80,149 @@ void MCP2515_ISR_95()
 void setup(void)
 {
 #ifdef MDEBUG
-  Serial.begin(115200);
+   Serial.begin(115200);
 #endif
-  pinMode(LED_CAN33_ORANGE, OUTPUT);
-  pinMode(LED_CAN95_YELLOW, OUTPUT);
-  pinMode(LED_BLUE, OUTPUT);
-  pinMode(LED_RED, OUTPUT);
-  pinMode(LED_WHITE, OUTPUT);
-  pinMode(LED_YELLOW, OUTPUT);
-  
-  digitalWrite(LED_WHITE, HIGH);
-  digitalWrite(LED_YELLOW, HIGH);
-  digitalWrite(LED_BLUE, HIGH);
-  digitalWrite(LED_RED, HIGH);
-  /*
-  pinMode(RF_CS_PIN, OUTPUT);
-  pinMode(SPI_CS_PIN1, OUTPUT);
-  pinMode(SPI_CS_PIN2, OUTPUT);
-  
-  digitalWrite(RF_CS_PIN, HIGH);
-  digitalWrite(SPI_CS_PIN2, HIGH);
-  digitalWrite(SPI_CS_PIN1, LOW);
-  */
-  
-//CAN33.init_CS(SPI_CS_PIN1);                                    // Set CS pin
-//#ifdef CA2
-//CAN95.init_CS(SPI_CS_PIN2);                                    // Set CS pin
-//#endif
-    while (CAN_OK != CAN33.begin(CAN_33KBPS, MCP_8MHz))              // init can bus : baudrate = 500k
-    {
+   pinMode(LED_CAN33_ORANGE, OUTPUT);
+   pinMode(LED_CAN95_YELLOW, OUTPUT);
+   pinMode(LED_BLUE, OUTPUT);
+   pinMode(LED_RED, OUTPUT);
+   pinMode(LED_WHITE, OUTPUT);
+   pinMode(LED_YELLOW, OUTPUT);
+
+   digitalWrite(LED_WHITE, HIGH);
+   digitalWrite(LED_YELLOW, HIGH);
+   digitalWrite(LED_BLUE, HIGH);
+   digitalWrite(LED_RED, HIGH);
+
+   while (CAN_OK != CAN33.begin(CAN_33KBPS, MCP_8MHz))
+   {
 #ifdef MDEBUG
-        Serial.println("CAN BUS Shield init fail");
-        Serial.println(" Init CAN BUS Shield again");
+      Serial.println("CAN BUS Shield init fail");
+      Serial.println(" Init CAN BUS Shield again");
 #endif
-        delay(100);
-    }
-#ifdef CA2
- //digitalWrite(SPI_CS_PIN1, HIGH);
- // digitalWrite(SPI_CS_PIN2, LOW);
+      delay(100);
+   }
  
-    while (CAN_OK != CAN95.begin(CAN_125KBPS, MCP_8MHz))              // init can bus : baudrate = 500k
-    {
+   while (CAN_OK != CAN95.begin(CAN_125KBPS, MCP_8MHz))              // init can bus : baudrate = 500k
+   {
 #ifdef MDEBUG
-        Serial.println("CAN BUS Shield init fail");
-        Serial.println(" Init CAN BUS Shield again");
+      Serial.println("CAN BUS Shield init fail");
+      Serial.println(" Init CAN BUS Shield again");
 #endif
-        delay(100);
-    }
-#endif
-    delay(250);
+      delay(100);
+   }
+
+   delay(250);
 
 #ifdef MDEBUG  
-    Serial.println("CAN BUS 33 & 95 Shields init ok!");
+   Serial.println("CAN BUS 33 & 95 Shields init ok!");
 #endif
 
-/*
-    digitalWrite(WHITE_LED, LOW);
-    digitalWrite(YELLOW_LED, LOW);
-    digitalWrite(BLUE_LED, LOW);
-*/
-//    attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
-  //CAN33.init_Mask(0, 0, 0x5ff);
-  //CAN33.init_Mask(1, 0, 0x5ff);
-  ///CAN33.init_Filt(1, 0, 0x350);                          // there is filter in mcp2515
-  //CAN33.init_Filt(2, 0, 0x260);                          // there is filter in mcp2515
-//  #ifdef CA2
-  //CAN95.init_Mask(0, 0, 0x5ff);
-  //CAN95.init_Filt(0, 0, 0x450);                          // there is filter in mcp2515
- // #endif
-  delay(100);
+   digitalWrite(LED_RED, LOW);
+   digitalWrite(LED_WHITE, LOW);
+   digitalWrite(LED_YELLOW, LOW);
+   digitalWrite(LED_BLUE, LOW);
+   //attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
+   //CAN33.init_Mask(0, 0, 0x5ff);
+   //CAN33.init_Mask(1, 0, 0x5ff);
+   //CAN33.init_Filt(1, 0, 0x350);                          // there is filter in mcp2515
+   //CAN33.init_Filt(2, 0, 0x260);                          // there is filter in mcp2515
+   //CAN95.init_Mask(0, 0, 0x5ff);
+   //CAN95.init_Filt(0, 0, 0x450);                          // there is filter in mcp2515
+   delay(100);
   
 #ifdef MDEBUG
-  fdev_setup_stream(&uartout, uart_putchar, NULL, _FDEV_SETUP_WRITE);
-  stdout = &uartout;
+   fdev_setup_stream(&uartout, uart_putchar, NULL, _FDEV_SETUP_WRITE);
+   stdout = &uartout;
 #endif
-  //
-  // Setup and configure rf radio
-  //
+   //
+   // Setup and configure rf radio
+   //
+   radio.begin();
+   // enable dynamic payloads
+   radio.enableDynamicPayloads();
+   radio.enableAckPayload();
+   //radio.setAutoAck(1);
+   // optionally, increase the delay between retries & # of retries
+   radio.setRetries(5,15);
+   radio.setChannel(35);
+   radio.setPALevel(RF24_PA_MAX);
+   //radio.setCRCLength(RF24_CRC_8)
+   // Open pipes to other nodes for communication
+   // This simple sketch opens two pipes for these two nodes to communicate
+   // back and forth.
+   // Open 'our' pipe for writing
+   // Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
+   radio.openWritingPipe(pipes[0]);
+   radio.openReadingPipe(1,pipes[1]);
+   // Start listening
+   radio.startListening();
 
-  //digitalWrite(RF_CS_PIN, HIGH);
-  //digitalWrite(SPI_CS_PIN1, HIGH);
-  //digitalWrite(SPI_CS_PIN2, HIGH);
-  
-  radio.begin();
-
-  // enable dynamic payloads
-  radio.enableDynamicPayloads();
-  radio.enableAckPayload();
-  //radio.setAutoAck(1);
-  // optionally, increase the delay between retries & # of retries
-  radio.setRetries(5,15);
-  radio.setChannel(35);
-  radio.setPALevel(RF24_PA_MAX);
-  //radio.setCRCLength(RF24_CRC_8)
-  
-  //
-  // Open pipes to other nodes for communication
-  // This simple sketch opens two pipes for these two nodes to communicate
-  // back and forth.
-  // Open 'our' pipe for writing
-  // Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
-    radio.openWritingPipe(pipes[0]);
-    radio.openReadingPipe(1,pipes[1]);
-  //
-  // Start listening
-  //
-
-  radio.startListening();
-
-  //
+#ifdef MDEBUG  
   // Dump the configuration of the rf unit for debugging
-#ifdef MDEBUG  
-  radio.printDetails();
+   radio.printDetails();
 #endif
 }
 
 void loop(void)
 {
-
-  //digitalWrite(RF_CS_PIN, HIGH);
-  //digitalWrite(SPI_CS_PIN2, HIGH);
-  //digitalWrite(SPI_CS_PIN1, LOW);
-    // The payload will always be the same, what will change is how much of it we send.
-    if(CAN_MSGAVAIL == CAN33.checkReceive())
-    {
-        //flagRecv = 0;                // clear flag
-  digitalWrite(ORANGE_LED, HIGH);
-        
-        CAN33.readMsgBuf(&can_msg_len, can_msg_buf);    // read data,  len: data length, buf: data buf
+   if(CAN_MSGAVAIL == CAN33.checkReceive())
+   {
+      // flagRecv33 = 0;                // clear flag
+      digitalWrite(LED_CAN33_ORANGE, HIGH);
+      CAN33.readMsgBuf(&can_msg_len, can_msg_buf);
 #ifdef MDEBUG
-          Serial.print("Got can1 ");
-          Serial.print(CAN33.getCanId(),HEX);
-          Serial.print(" msg: ");
-        for(int i = 0; i<can_msg_len; i++)    // print the data
-        {
-            Serial.print("0x");
-            Serial.print(can_msg_buf[i], HEX);
-            Serial.print(" ");
-        }
-        Serial.println();    
+      Serial.print("Got can1 ");
+      Serial.print(CAN33.getCanId(),HEX);
+      Serial.print(" msg: ");
+      for(int i = 0; i<can_msg_len; i++) 
+      {
+         Serial.print("0x");
+         Serial.print(can_msg_buf[i], HEX);
+         Serial.print(" ");
+      }
+      Serial.println();    
 #endif
-        switch(CAN33.getCanId())
-        {
-          case 0x350:
+      switch(CAN33.getCanId())
+      {
+         case 0x350:
             if ( can_msg_buf[0] & (1<<2) )
-                send_payload[1] |= (1<<0);
+               send_payload[1] |= (1<<0);
             else
-                send_payload[1] &=~ (1<<0);
+               send_payload[1] &=~ (1<<0);
             break;
-          case 0x260:
+         case 0x260:
             send_payload[1] &=~ (1<<1);
             send_payload[1] &=~ (1<<2);
             send_payload[1] &=~ (1<<3);
             if ( can_msg_buf[0] == 0b00100101 )
-                send_payload[1] |= (1<<1);
+               send_payload[1] |= (1<<1);
             if ( can_msg_buf[0] == 0b00111010 )
-                send_payload[1] |= (1<<2);
+               send_payload[1] |= (1<<2);
             if ( can_msg_buf[0] == 0b00011111 )
-                send_payload[1] |= (1<<3);
+               send_payload[1] |= (1<<3);
             break;
-          default:
+         default:
             break;
-        }// switch
-    }// if can.checkrecieve
-#ifdef CA2
-//digitalWrite(SPI_CS_PIN1, HIGH);
-//  digitalWrite(SPI_CS_PIN2, LOW);
+      }// switch
+   }// if can.checkrecieve
   
    if(CAN_MSGAVAIL == CAN95.checkReceive())
    {
-     digitalWrite(YELLOW_LED, HIGH);
-  
-        CAN95.readMsgBuf(&can_msg_len, can_msg_buf);    // read data,  len: data length, buf: data buf
+      // flagRecv95 = 0;
+      digitalWrite(LED_CAN95_YELLOW, HIGH);
+      CAN95.readMsgBuf(&can_msg_len, can_msg_buf);
 #ifdef MDEBUG
-          Serial.print("Got can2 ");
-          Serial.print(CAN95.getCanId(),HEX);
-          Serial.print(" msg: ");
-        for(int i = 0; i<can_msg_len; i++)    // print the data
-        {
-            Serial.print("0x");
-            Serial.print(can_msg_buf[i], HEX);
-            Serial.print(" ");
-        }
-        Serial.println();   
+      Serial.print("Got can2 ");
+      Serial.print(CAN95.getCanId(),HEX);
+      Serial.print(" msg: ");
+      for(int i = 0; i<can_msg_len; i++)
+      {
+         Serial.print("0x");
+         Serial.print(can_msg_buf[i], HEX);
+         Serial.print(" ");
+      }
+      Serial.println();
 #endif
         switch(CAN95.getCanId())
         {
@@ -274,81 +234,74 @@ void loop(void)
                break;
             default:
                break;
-         }
-   }    
-#endif
+         } // switch
+   }// if can.checkrecieve
 
-/*
-    if (send_payload[1] & (1<<0))
-    {
-        digitalWrite(BLUE_LED, HIGH);
-              
-        if ( send_payload[1] & (1<<3) )
-        {
-            digitalWrite(WHITE_LED, HIGH); // ON
-            digitalWrite(YELLOW_LED, HIGH); // ON
-        }
-        else if( send_payload[1] & (1<<1) )
-        {
-            digitalWrite(WHITE_LED, HIGH); // ON
-            digitalWrite(YELLOW_LED, LOW); // OFF
-        }
-        else if ( send_payload[1] & (1<<2) )
-        {
-//            digitalWrite(WHITE_LED, LOW); // OFF
-            digitalWrite(YELLOW_LED, HIGH); // ON
-        }
-        else
-        {
-            digitalWrite(WHITE_LED, LOW); // OFF
-            digitalWrite(YELLOW_LED, LOW); // OFF
-        }
-    }
-    else
-    {
-      digitalWrite(BLUE_LED, LOW); // OFF
-      digitalWrite(WHITE_LED, LOW); // OFF
-      digitalWrite(YELLOW_LED, LOW); // OFF  
-    }
-  */  
-       // First, stop listening so we can talk.
+   if (send_payload[1] & (1<<0))
+   {
+      digitalWrite(LED_BLUE, HIGH);
 
-  
- // digitalWrite(SPI_CS_PIN1, HIGH);
-//   digitalWrite(SPI_CS_PIN2, HIGH); 
- // digitalWrite(RF_CS_PIN, LOW);
-    
-    radio.stopListening();
+      if ( send_payload[1] & (1<<3) )
+      {
+         digitalWrite(LED_RED, HIGH); // ON
+      }
+      else if( send_payload[1] & (1<<1) )
+      {
+         digitalWrite(LED_WHITE, HIGH); // ON
+         digitalWrite(LED_YELLOW, LOW); // OFF
+      }
+      else if ( send_payload[1] & (1<<2) )
+      {
+         digitalWrite(LED_WHITE, LOW); // OFF
+         digitalWrite(LED_YELLOW, HIGH); // ON
+      }
+      else
+      {
+         digitalWrite(LED_WHITE, LOW); // OFF
+         digitalWrite(LED_RED, LOW); // OFF
+         digitalWrite(LED_YELLOW, LOW); // OFF
+      }
+   }
+   else
+   {
+      digitalWrite(LED_BLUE, LOW); // OFF
+      digitalWrite(LED_WHITE, LOW); // OFF
+      digitalWrite(LED_YELLOW, LOW); // OFF  
+      digitalWrite(LED_RED, LOW); // OFF  
+   }
+
+   // First, stop listening so we can talk.
+   radio.stopListening();
 
     // Take the time, and send it.  This will block until complete
 #ifdef MDEBUG
    // Serial.print(F("Try to send with length "));
    // Serial.println(payload_size);
 #endif
-    radio.flush_tx();
-    radio.write( send_payload, payload_size );
+   radio.flush_tx();
+   radio.write( send_payload, payload_size );
 
-    //return;
+   //return;
  
-    // Now, continue listening
-    radio.startListening();
-    // Wait here until we get a response, or timeout
-    unsigned long started_waiting_at = millis();
-    bool timeout = false;
-    while ( ! radio.available() && ! timeout )
+   // Now, continue listening
+   radio.startListening();
+   // Wait here until we get a response, or timeout
+   unsigned long started_waiting_at = millis();
+   bool timeout = false;
+   while ( ! radio.available() && ! timeout )
       if (millis() - started_waiting_at > 100 )
-        timeout = true;
-    //digitalWrite(BLUE_LED, LOW);
-    
-    // Describe the results
-    if ( timeout )
-    {
+         timeout = true;
+   //digitalWrite(BLUE_LED, LOW);
+   
+   // Describe the results
+   if ( timeout )
+   {
 #ifdef MDEBUG
    //   Serial.println(F("Failed, response timed out."));
 #endif
-    }
-    else
-    {
+   }
+   else
+   {
       // Grab the response, compare, and send to debugging spew
       uint8_t len = radio.getDynamicPayloadSize();
       
@@ -361,25 +314,22 @@ void loop(void)
       receive_payload[len] = 0;
 
 #ifdef MDEBUG
-      // Spew it
       Serial.print(F("Got response size="));
       Serial.print(len);
       Serial.print(F(" value="));
       for(int i = 0; i<len; i++)    // print the data
-        {
-            Serial.print("0x");
-            Serial.print(receive_payload[i], HEX);
-            Serial.print(" ");
-        }
-        Serial.println();
+      {
+         Serial.print("0x");
+         Serial.print(receive_payload[i], HEX);
+         Serial.print(" ");
+      }
+      Serial.println();
 #endif
-    }
-    // Update size for next time.    
-    // Try again 1s later
-    delay(250);
-    digitalWrite(ORANGE_LED, LOW);
-    digitalWrite(YELLOW_LED, LOW);
-  
-  
+   }
+   // Update size for next time.    
+   // Try again 1s later
+   delay(250);
+   digitalWrite(LED_CAN33_ORANGE, LOW);
+   digitalWrite(LED_CAN95_YELLOW, LOW);
 }
 // vim:cin:ai:sts=2 sw=2 ft=cpp
