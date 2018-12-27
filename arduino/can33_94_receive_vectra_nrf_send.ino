@@ -21,19 +21,17 @@
 const int RF_CS_PIN = 9;
 const int RF_CSN_PIN = 10;
 const int SPI_CS_PIN1 = 6;
-
-#define CA2
-#ifdef CA2
 const int SPI_CS_PIN2 = 5;
-#endif
 
 #ifdef MDEBUG
+/*
 static FILE uartout = {0};
 static int uart_putchar(char c, FILE *stream)
 {
   Serial.write(c);
   return 0;
 }
+*/
 #endif
 
 // Set up nRF24L01 radio on SPI bus plus pins 7 & 8
@@ -52,9 +50,8 @@ char receive_payload[max_payload_size+1]; // +1 to allow room for a terminating 
   
 
 MCP_CAN_33 CAN33(SPI_CS_PIN1);                                    // Set CS pin
-#ifdef CA2
 MCP_CAN CAN95(SPI_CS_PIN2);                                    // Set CS pin
-#endif
+
 unsigned char flagRecv33 = 0;
 unsigned char flagRecv95 = 0;
 
@@ -103,7 +100,7 @@ void setup(void)
       delay(100);
    }
  
-   while (CAN_OK != CAN95.begin(CAN_125KBPS, MCP_8MHz))              // init can bus : baudrate = 500k
+   while (CAN_OK != CAN95.begin(CAN_95K24BPS, MCP_8MHz))              // init can bus : baudrate = 500k
    {
 #ifdef MDEBUG
       Serial.println("CAN BUS Shield init fail");
@@ -132,8 +129,10 @@ void setup(void)
    delay(100);
   
 #ifdef MDEBUG
+/*
    fdev_setup_stream(&uartout, uart_putchar, NULL, _FDEV_SETUP_WRITE);
    stdout = &uartout;
+   */
 #endif
    //
    // Setup and configure rf radio
@@ -227,7 +226,7 @@ void loop(void)
         switch(CAN95.getCanId())
         {
             case 0x450:
-               if ( can_msg_buf[3] == 0x47 )
+               if ( can_msg_buf[3] == 0b01000111 ) // 0x47 
                    send_payload[1] |= (1<<0);
                else
                    send_payload[1] &=~ (1<<0);
@@ -242,25 +241,19 @@ void loop(void)
       digitalWrite(LED_BLUE, HIGH);
 
       if ( send_payload[1] & (1<<3) )
-      {
          digitalWrite(LED_RED, HIGH); // ON
-      }
-      else if( send_payload[1] & (1<<1) )
-      {
-         digitalWrite(LED_WHITE, HIGH); // ON
-         digitalWrite(LED_YELLOW, LOW); // OFF
-      }
-      else if ( send_payload[1] & (1<<2) )
-      {
-         digitalWrite(LED_WHITE, LOW); // OFF
-         digitalWrite(LED_YELLOW, HIGH); // ON
-      }
       else
-      {
+         digitalWrite(LED_RED, LOW); 
+      
+      if( send_payload[1] & (1<<1) )
+         digitalWrite(LED_WHITE, HIGH); // ON
+      else      
          digitalWrite(LED_WHITE, LOW); // OFF
-         digitalWrite(LED_RED, LOW); // OFF
+
+      if ( send_payload[1] & (1<<2) )
+         digitalWrite(LED_YELLOW, HIGH); // ON
+      else
          digitalWrite(LED_YELLOW, LOW); // OFF
-      }
    }
    else
    {
