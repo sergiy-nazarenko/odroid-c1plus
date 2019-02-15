@@ -41,6 +41,8 @@ uint8_t spi_send_recv(uint8_t data)
     return SPDR;
 }
 
+#define RADIO_PORT_CECSN PORTD
+#define RADIO_DDR_CECSN DDRD
 #define RADIO_PORT PORTB
 #define RADIO_DDR DDRB
 #define RADIO_PIN PINB

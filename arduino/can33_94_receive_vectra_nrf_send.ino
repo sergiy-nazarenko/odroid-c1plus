@@ -5,7 +5,7 @@
 #include "mcp_can33.h"
 #include <stdio.h>
 
-#define MDEBUG
+//#define MDEBUG
 //
 //
 // Hardware configuration
@@ -100,7 +100,7 @@ void setup(void)
       delay(100);
    }
  
-   while (CAN_OK != CAN95.begin(CAN_95K24BPS, MCP_8MHz))              // init can bus : baudrate = 500k
+   while (CAN_OK != CAN95.begin(CAN_33KBPS, MCP_8MHz))              // CAN_95K24BPS init can bus : baudrate = 500k
    {
 #ifdef MDEBUG
       Serial.println("CAN BUS Shield init fail");
@@ -120,12 +120,13 @@ void setup(void)
    digitalWrite(LED_YELLOW, LOW);
    digitalWrite(LED_BLUE, LOW);
    //attachInterrupt(0, MCP2515_ISR, FALLING); // start interrupt
-   //CAN33.init_Mask(0, 0, 0x5ff);
-   //CAN33.init_Mask(1, 0, 0x5ff);
-   //CAN33.init_Filt(1, 0, 0x350);                          // there is filter in mcp2515
-   //CAN33.init_Filt(2, 0, 0x260);                          // there is filter in mcp2515
-   //CAN95.init_Mask(0, 0, 0x5ff);
-   //CAN95.init_Filt(0, 0, 0x450);                          // there is filter in mcp2515
+   CAN95.init_Mask(0, 0, 0x3ff);
+   CAN95.init_Mask(1, 0, 0x2ff);
+   CAN95.init_Filt(0, 0, 0x350);                          // there is filter in mcp2515
+   CAN95.init_Filt(1, 0, 0x260);                          // there is filter in mcp2515
+ /*  CAN95.init_Mask(0, 0, 0x5ff);
+   CAN95.init_Filt(0, 0, 0x450);                          // there is filter in mcp2515
+   */
    delay(100);
   
 #ifdef MDEBUG
@@ -164,48 +165,7 @@ void setup(void)
 }
 
 void loop(void)
-{
-   if(CAN_MSGAVAIL == CAN33.checkReceive())
-   {
-      // flagRecv33 = 0;                // clear flag
-      digitalWrite(LED_CAN33_ORANGE, HIGH);
-      CAN33.readMsgBuf(&can_msg_len, can_msg_buf);
-#ifdef MDEBUG
-      Serial.print("Got can1 ");
-      Serial.print(CAN33.getCanId(),HEX);
-      Serial.print(" msg: ");
-      for(int i = 0; i<can_msg_len; i++) 
-      {
-         Serial.print("0x");
-         Serial.print(can_msg_buf[i], HEX);
-         Serial.print(" ");
-      }
-      Serial.println();    
-#endif
-      switch(CAN33.getCanId())
-      {
-         case 0x350:
-            if ( can_msg_buf[0] & (1<<2) )
-               send_payload[1] |= (1<<0);
-            else
-               send_payload[1] &=~ (1<<0);
-            break;
-         case 0x260:
-            send_payload[1] &=~ (1<<1);
-            send_payload[1] &=~ (1<<2);
-            send_payload[1] &=~ (1<<3);
-            if ( can_msg_buf[0] == 0b00100101 )
-               send_payload[1] |= (1<<1);
-            if ( can_msg_buf[0] == 0b00111010 )
-               send_payload[1] |= (1<<2);
-            if ( can_msg_buf[0] == 0b00011111 )
-               send_payload[1] |= (1<<3);
-            break;
-         default:
-            break;
-      }// switch
-   }// if can.checkrecieve
-  
+{  /*
    if(CAN_MSGAVAIL == CAN95.checkReceive())
    {
       // flagRecv95 = 0;
@@ -235,7 +195,50 @@ void loop(void)
                break;
          } // switch
    }// if can.checkrecieve
+*/
+   if(CAN_MSGAVAIL == CAN95.checkReceive())
+   {
+      // flagRecv33 = 0;                // clear flag
+      digitalWrite(LED_CAN33_ORANGE, HIGH);
+      CAN95.readMsgBuf(&can_msg_len, can_msg_buf);
 
+
+#ifdef MDEBUG
+      Serial.print("Got can1 ");
+      Serial.print(CAN95.getCanId(),HEX);
+      Serial.print(" msg: ");
+      for(int i = 0; i<can_msg_len; i++) 
+      {
+         Serial.print("0x");
+         Serial.print(can_msg_buf[i], HEX);
+         Serial.print(" ");
+      }
+      Serial.println();    
+#endif
+      switch(CAN95.getCanId())
+      {
+         case 0x350:
+            if ( can_msg_buf[0] & (1<<2) )
+               send_payload[1] |= (1<<0);
+            else
+               send_payload[1] &=~ (1<<0);
+            break;
+         case 0x260:
+            send_payload[1] &=~ (1<<1);
+            send_payload[1] &=~ (1<<2);
+            send_payload[1] &=~ (1<<3);
+            if ( can_msg_buf[0] == 0b00100101 )
+               send_payload[1] |= (1<<1);
+            if ( can_msg_buf[0] == 0b00111010 )
+               send_payload[1] |= (1<<2);
+            if ( can_msg_buf[0] == 0b00011111 )
+               send_payload[1] |= (1<<3);
+            break;
+         default:
+            break;
+      }// switch
+   }// if can.checkrecieve
+  
    if (send_payload[1] & (1<<0))
    {
       digitalWrite(LED_BLUE, HIGH);
@@ -321,7 +324,7 @@ void loop(void)
    }
    // Update size for next time.    
    // Try again 1s later
-   delay(250);
+   //delay(250);
    digitalWrite(LED_CAN33_ORANGE, LOW);
    digitalWrite(LED_CAN95_YELLOW, LOW);
 }
