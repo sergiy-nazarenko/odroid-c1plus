@@ -591,7 +591,7 @@
             clocks = <&mcp2515_clk>;
             spi-max-frequency = <10000000>;
             irq-falling = <1>;
-            irq-gpio = "GPIOY_3";
+            irq-gpio = "GPIOX_7";
             mcp2515_clk: oscillator {
                 #clock-cells = <0>;
                 compatible = "fixed-clock";
