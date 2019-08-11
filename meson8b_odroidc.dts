@@ -581,8 +581,8 @@
         pinctrl-names="default";
         pinctrl-0=<&aml_spicc_pins>;
         device_id = <0>;
-        num_chipselect = <5>;
-        cs_gpios = "GPIOX_20", "GPIOX_21", "GPIOX_6", "GPIOX_5", "GPIOX_4";/**/
+        num_chipselect = <8>;
+        cs_gpios = "GPIOX_20", "GPIOX_21", "GPIOX_6", "GPIOX_5", "GPIOX_4","GPIOY_8","GPIOX_11","GPIOX_0";/**/
   /**/
      
        can0: mcp2515@0 {
@@ -614,6 +614,30 @@
             spi-max-frequency = <10000000>;
             irq-falling = <1>;
             irq-gpio = "GPIOX_19";
+        };
+       can3: mcp2515@3 {
+            compatible = "microchip,mcp2515";
+            reg = <5>;
+            clocks = <&mcp2515_clk>;
+            spi-max-frequency = <10000000>;
+            irq-falling = <1>;
+            irq-gpio = "GPIOX_2";
+        };
+       can4: mcp2515@4 {
+            compatible = "microchip,mcp2515";
+            reg = <6>;
+            clocks = <&mcp2515_clk>;
+            spi-max-frequency = <10000000>;
+            irq-falling = <1>;
+            irq-gpio = "GPIOY_3";
+        };
+       can5: mcp2515@5 {
+            compatible = "microchip,mcp2515";
+            reg = <7>;
+            clocks = <&mcp2515_clk>;
+            spi-max-frequency = <10000000>;
+            irq-falling = <1>;
+            irq-gpio = "GPIOX_1";
         };
 	/**/
         spidev@2 {
