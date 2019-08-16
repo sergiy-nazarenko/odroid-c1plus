@@ -62,9 +62,7 @@ void spi_init()
 
 #define spi_read()         spi_readwrite(0x00)
 #define spi_write(spi_val) spi_readwrite(spi_val)
-#define SPI_BEGIN()        pSPI->beginTransaction(SPISettings(10000000, MSBFIRST, SPI_MODE0))
-#define SPI_END()          pSPI->endTransaction()
-
+#define DEBUG_PRINT(x) // x;
 
 
 /*********************************************************************************************************
@@ -211,9 +209,6 @@ uint8_t mcp2515_readRegister(const uint8_t address)
 void mcp2515_readRegisterS(const uint8_t address, uint8_t values[], const uint8_t n)
 {
     uint8_t i;
-#ifdef SPI_HAS_TRANSACTION
-    SPI_BEGIN();
-#endif
     MCP2515_SELECT();
     spi_readwrite(MCP_READ);
     spi_readwrite(address);
@@ -223,9 +218,6 @@ void mcp2515_readRegisterS(const uint8_t address, uint8_t values[], const uint8_
       values[i] = spi_read();
     }
     MCP2515_UNSELECT();
-#ifdef SPI_HAS_TRANSACTION
-    SPI_END();
-#endif
 }
 
 /*********************************************************************************************************
@@ -234,17 +226,11 @@ void mcp2515_readRegisterS(const uint8_t address, uint8_t values[], const uint8_
 *********************************************************************************************************/
 void mcp2515_setRegister(const uint8_t address, const uint8_t value)
 {
-#ifdef SPI_HAS_TRANSACTION
-    SPI_BEGIN();
-#endif
     MCP2515_SELECT();
     spi_readwrite(MCP_WRITE);
     spi_readwrite(address);
     spi_readwrite(value);
     MCP2515_UNSELECT();
-#ifdef SPI_HAS_TRANSACTION
-    SPI_END();
-#endif
 }
 
 /*********************************************************************************************************
@@ -254,9 +240,6 @@ void mcp2515_setRegister(const uint8_t address, const uint8_t value)
 void mcp2515_setRegisterS(const uint8_t address, const uint8_t values[], const uint8_t n)
 {
     uint8_t i;
-#ifdef SPI_HAS_TRANSACTION
-    SPI_BEGIN();
-#endif
     MCP2515_SELECT();
     spi_readwrite(MCP_WRITE);
     spi_readwrite(address);
@@ -266,9 +249,6 @@ void mcp2515_setRegisterS(const uint8_t address, const uint8_t values[], const u
       spi_readwrite(values[i]);
     }
     MCP2515_UNSELECT();
-#ifdef SPI_HAS_TRANSACTION
-    SPI_END();
-#endif
 }
 
 /*********************************************************************************************************
@@ -277,18 +257,12 @@ void mcp2515_setRegisterS(const uint8_t address, const uint8_t values[], const u
 *********************************************************************************************************/
 void mcp2515_modifyRegister(const uint8_t address, const uint8_t mask, const uint8_t data)
 {
-#ifdef SPI_HAS_TRANSACTION
-    SPI_BEGIN();
-#endif
     MCP2515_SELECT();
     spi_readwrite(MCP_BITMOD);
     spi_readwrite(address);
     spi_readwrite(mask);
     spi_readwrite(data);
     MCP2515_UNSELECT();
-#ifdef SPI_HAS_TRANSACTION
-    SPI_END();
-#endif
 }
 
 /*********************************************************************************************************
@@ -298,64 +272,13 @@ void mcp2515_modifyRegister(const uint8_t address, const uint8_t mask, const uin
 uint8_t mcp2515_readStatus(void)
 {
     uint8_t i;
-#ifdef SPI_HAS_TRANSACTION
-    SPI_BEGIN();
-#endif
     MCP2515_SELECT();
     spi_readwrite(MCP_READ_STATUS);
     i = spi_read();
     MCP2515_UNSELECT();
-#ifdef SPI_HAS_TRANSACTION
-    SPI_END();
-#endif
-
     return i;
 }
 
-/*********************************************************************************************************
-** Function name:           setSleepWakeup
-** Descriptions:            Enable or disable the wake up interrupt (If disabled the MCP2515 will not be woken up by CAN bus activity)
-*********************************************************************************************************/
-void mcp2515_setSleepWakeup(const uint8_t enable)
-{
-    mcp2515_modifyRegister(MCP_CANINTE, MCP_WAKIF, enable ? MCP_WAKIF : 0);
-}
-
-/*********************************************************************************************************
-** Function name:           sleep
-** Descriptions:            Put mcp2515 in sleep mode to save power
-*********************************************************************************************************/
-uint8_t mcp2515_sleep() 
-{
-    if(getMode() != MODE_SLEEP)
-        return mcp2515_setCANCTRL_Mode(MODE_SLEEP);
-    else
-        return CAN_OK;
-}
-
-/*********************************************************************************************************
-** Function name:           wake
-** Descriptions:            wake MCP2515 manually from sleep. It will come back in the mode it was before sleeping.
-*********************************************************************************************************/
-uint8_t mcp2515_wake() 
-{
-    uint8_t currMode = mcp2515_getMode();
-    if(currMode != mcpMode)
-        return mcp2515_setCANCTRL_Mode(mcpMode);
-    else
-        return CAN_OK;
-}
-
-/*********************************************************************************************************
-** Function name:           setMode
-** Descriptions:            Sets control mode
-*********************************************************************************************************/
-uint8_t mcp2515_setMode(const uint8_t opMode)
-{
-    if(opMode != MODE_SLEEP) // if going to sleep, the value stored in opMode is not changed so that we can return to it later
-        mcpMode = opMode;
-    return mcp2515_setCANCTRL_Mode(opMode);
-}
 
 /*********************************************************************************************************
 ** Function name:           getMode
@@ -688,7 +611,6 @@ void mcp2515_initCANBuffers(void)
 *********************************************************************************************************/
 uint8_t mcp2515_init(const uint8_t canSpeed, const uint8_t clock)
 {
-
     uint8_t res;
 
     // mcp2515_reset();
@@ -697,19 +619,18 @@ uint8_t mcp2515_init(const uint8_t canSpeed, const uint8_t clock)
     MCP2515_UNSELECT();
     delay(10);
 
-
     res = mcp2515_setCANCTRL_Mode(MODE_CONFIG);
     if (res > 0)
     {
 #if DEBUG_EN
-      Serial.print("Enter setting mode fail\r\n");
+      DEBUG_PRINT("Enter setting mode fail\r\n");
 #else
       delay(10);
 #endif
       return res;
     }
 #if DEBUG_EN
-    Serial.print("Enter setting mode success \r\n");
+    DEBUG_PRINT("Enter setting mode success \r\n");
 #else
     delay(10);
 #endif
@@ -718,20 +639,20 @@ uint8_t mcp2515_init(const uint8_t canSpeed, const uint8_t clock)
     if (mcp2515_configRate(canSpeed, clock))
     {
 #if DEBUG_EN
-      Serial.print("set rate fall!!\r\n");
+      DEBUG_PRINT("set rate fall!!\r\n");
 #else
       delay(10);
 #endif
       return res;
     }
 #if DEBUG_EN
-    Serial.print("set rate success!!\r\n");
+    DEBUG_PRINT("set rate success!!\r\n");
 #else
     delay(10);
 #endif
 
-    if ( res == MCP2515_OK ) {
-
+    if ( res == MCP2515_OK ) 
+    {
       // init canbuffers
       mcp2515_initCANBuffers();
 
@@ -754,11 +675,14 @@ uint8_t mcp2515_init(const uint8_t canSpeed, const uint8_t clock)
                              MCP_RXB_RX_STDEXT);
 #endif
       // enter normal mode
-      res = setMode(MODE_NORMAL);
+
+    mcpMode = MODE_NORMAL;
+    
+      res = mcp2515_setCANCTRL_Mode(MODE_NORMAL);
       if (res)
       {
 #if DEBUG_EN
-        Serial.print("Enter Normal Mode Fail!!\r\n");
+        DEBUG_PRINT("Enter Normal Mode Fail!!\r\n");
 #else
         delay(10);
 #endif
@@ -767,7 +691,7 @@ uint8_t mcp2515_init(const uint8_t canSpeed, const uint8_t clock)
 
 
 #if DEBUG_EN
-      Serial.print("Enter Normal Mode Success!!\r\n");
+      DEBUG_PRINT("Enter Normal Mode Success!!\r\n");
 #else
       delay(10);
 #endif
@@ -858,9 +782,6 @@ void mcp2515_write_canMsg(const uint8_t buffer_sidh_addr, uint16_t id, uint8_t e
 
   mcp2515_id_to_buf(ext,id,tbufdata);
 
-#ifdef SPI_HAS_TRANSACTION
-    SPI_BEGIN();
-#endif
   MCP2515_SELECT();
   spi_readwrite(load_addr);
   for (i = 0; i < 4; i++) spi_write(tbufdata[i]);
@@ -868,9 +789,6 @@ void mcp2515_write_canMsg(const uint8_t buffer_sidh_addr, uint16_t id, uint8_t e
   for (i = 0; i < len && i<CAN_MAX_CHAR_IN_MESSAGE; i++) spi_write(buf[i]);
 
   MCP2515_UNSELECT();
-#ifdef SPI_HAS_TRANSACTION
-    SPI_END();
-#endif
 
   mcp2515_start_transmit( buffer_sidh_addr );
 
@@ -971,34 +889,16 @@ uint8_t mcp2515_getNextFreeTXBuf(uint8_t *txbuf_n)                 // get Next f
     return MCP_ALLTXBUSY;
 }
 
-/*********************************************************************************************************
-** Function name:           MCP_CAN
-** Descriptions:            Constructor
-*********************************************************************************************************/
-MCP_CAN::MCP_CAN(uint8_t _CS) : nReservedTx(0)
-{
-  pSPI=&SPI; init_CS(_CS);
-}
-
-/*********************************************************************************************************
-** Function name:           init_CS
-** Descriptions:            init CS pin and set UNSELECTED
-*********************************************************************************************************/
-void mcp2515_init_CS(uint8_t _CS)
-{
-  if (_CS == 0) return;
-  SPICS = _CS;
-  pinMode(SPICS, OUTPUT);
-  MCP2515_UNSELECT();
-}
-
+    
 /*********************************************************************************************************
 ** Function name:           begin
 ** Descriptions:            init can and set speed
 *********************************************************************************************************/
 uint8_t mcp2515_begin(uint8_t speedset, const uint8_t clockset)
 {
-    pSPI->begin();
+    MCP2515_UNSELECT();
+    nReservedTx = 0;
+    spi_init();
     uint8_t res = mcp2515_init(speedset, clockset);
     
     return ((res == MCP2515_OK) ? CAN_OK : CAN_FAILINIT);
@@ -1029,14 +929,14 @@ uint8_t mcp2515_init_Mask(uint8_t num, uint8_t ext, uint16_t ulData)
 {
     uint8_t res = MCP2515_OK;
 #if DEBUG_EN
-    Serial.print("Begin to set Mask!!\r\n");
+    DEBUG_PRINT("Begin to set Mask!!\r\n");
 #else
     delay(10);
 #endif
     res = mcp2515_setCANCTRL_Mode(MODE_CONFIG);
     if (res > 0) {
 #if DEBUG_EN
-        Serial.print("Enter setting mode fall\r\n");
+        DEBUG_PRINT("Enter setting mode fall\r\n");
 #else
         delay(10);
 #endif
@@ -1055,14 +955,14 @@ uint8_t mcp2515_init_Mask(uint8_t num, uint8_t ext, uint16_t ulData)
     res = mcp2515_setCANCTRL_Mode(mcpMode);
     if (res > 0) {
 #if DEBUG_EN
-        Serial.print("Enter normal mode fall\r\n");
+        DEBUG_PRINT("Enter normal mode fall\r\n");
 #else
         delay(10);
 #endif
         return res;
     }
 #if DEBUG_EN
-    Serial.print("set Mask success!!\r\n");
+    DEBUG_PRINT("set Mask success!!\r\n");
 #else
     delay(10);
 #endif
@@ -1077,7 +977,7 @@ uint8_t mcp2515_init_Filt(uint8_t num, uint8_t ext, uint16_t ulData)
 {
     uint8_t res = MCP2515_OK;
 #if DEBUG_EN
-    Serial.print("Begin to set Filter!!\r\n");
+    DEBUG_PRINT("Begin to set Filter!!\r\n");
 #else
     delay(10);
 #endif
@@ -1085,7 +985,7 @@ uint8_t mcp2515_init_Filt(uint8_t num, uint8_t ext, uint16_t ulData)
     if (res > 0)
     {
 #if DEBUG_EN
-        Serial.print("Enter setting mode fall\r\n");
+        DEBUG_PRINT("Enter setting mode fall\r\n");
 #else
         delay(10);
 #endif
@@ -1126,14 +1026,14 @@ uint8_t mcp2515_init_Filt(uint8_t num, uint8_t ext, uint16_t ulData)
     if (res > 0)
     {
 #if DEBUG_EN
-        Serial.print("Enter normal mode fall\r\nSet filter fail!!\r\n");
+        DEBUG_PRINT("Enter normal mode fall\r\nSet filter fail!!\r\n");
 #else
         delay(10);
 #endif
         return res;
     }
 #if DEBUG_EN
-    Serial.print("set Filter success!!\r\n");
+    DEBUG_PRINT("set Filter success!!\r\n");
 #else
     delay(10);
 #endif
@@ -1436,7 +1336,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
                 break;
                 default:
 #if DEBUG_EN
-                    Serial.print("Invalid pin mode request\r\n");
+                    DEBUG_PRINT("Invalid pin mode request\r\n");
 #endif
                     return false;
             }
@@ -1455,7 +1355,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
                 break;
                 default:
 #if DEBUG_EN
-                    Serial.print("Invalid pin mode request\r\n");
+                    DEBUG_PRINT("Invalid pin mode request\r\n");
 #endif
                     return false;
             }
@@ -1466,7 +1366,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
             if(res > 0)
             {
 #if DEBUG_EN
-                Serial.print("Entering Configuration Mode Failure...\r\n");
+                DEBUG_PRINT("Entering Configuration Mode Failure...\r\n");
 #else
                 delay(10);
 #endif
@@ -1481,7 +1381,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
                 break;
                 default:
 #if DEBUG_EN
-                    Serial.print("Invalid pin mode request\r\n");
+                    DEBUG_PRINT("Invalid pin mode request\r\n");
 #endif
                     ret=false;
             }
@@ -1489,7 +1389,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
             if(res)
             {
 #if DEBUG_EN
-                Serial.print("`Setting ID Mode Failure...\r\n");
+                DEBUG_PRINT("`Setting ID Mode Failure...\r\n");
 #else
                 delay(10);
 #endif
@@ -1502,7 +1402,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
             if(res > 0)
             {
 #if DEBUG_EN
-                Serial.print("Entering Configuration Mode Failure...\r\n");
+                DEBUG_PRINT("Entering Configuration Mode Failure...\r\n");
 #else
                 delay(10);
 #endif
@@ -1517,7 +1417,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
                 break;
                 default:
 #if DEBUG_EN
-                    Serial.print("Invalid pin mode request\r\n");
+                    DEBUG_PRINT("Invalid pin mode request\r\n");
 #endif
                     ret=false;
             }
@@ -1525,7 +1425,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
             if(res)
             {
 #if DEBUG_EN
-                Serial.print("`Setting ID Mode Failure...\r\n");
+                DEBUG_PRINT("`Setting ID Mode Failure...\r\n");
 #else
                 delay(10);
 #endif
@@ -1538,7 +1438,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
             if(res > 0)
             {
 #if DEBUG_EN
-                Serial.print("Entering Configuration Mode Failure...\r\n");
+                DEBUG_PRINT("Entering Configuration Mode Failure...\r\n");
 #else
                 delay(10);  
 #endif
@@ -1553,7 +1453,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
                 break;
                 default:
 #if DEBUG_EN
-                    Serial.print("Invalid pin mode request\r\n");
+                    DEBUG_PRINT("Invalid pin mode request\r\n");
 #endif
                     ret=false;
             }
@@ -1561,7 +1461,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
             if(res)
             {
 #if DEBUG_EN
-                Serial.print("`Setting ID Mode Failure...\r\n");
+                DEBUG_PRINT("`Setting ID Mode Failure...\r\n");
 #else
                 delay(10);
 #endif
@@ -1571,7 +1471,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
         break;
         default:
 #if DEBUG_EN
-            Serial.print("Invalid pin for mode request\r\n");
+            DEBUG_PRINT("Invalid pin for mode request\r\n");
 #endif
             return false;
     }
@@ -1608,7 +1508,7 @@ bool mcpDigitalWrite(const uint8_t pin, const uint8_t mode) {
         break;
         default:
 #if DEBUG_EN
-            Serial.print("Invalid pin for mcpDigitalWrite\r\n");
+            DEBUG_PRINT("Invalid pin for mcpDigitalWrite\r\n");
 #endif
             return false;
     }
@@ -1673,7 +1573,7 @@ uint8_t mcpDigitalRead(const uint8_t pin) {
         break;
         default:
 #if DEBUG_EN
-            Serial.print("Invalid pin for mcpDigitalRead\r\n");
+            DEBUG_PRINT("Invalid pin for mcpDigitalRead\r\n");
 #endif
             return LOW;
     }

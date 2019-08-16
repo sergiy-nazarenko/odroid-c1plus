@@ -59,8 +59,6 @@
                                             // either extended (the 29 LSB) or standard (the 11 LSB)
     uint16_t  can_id;                  // can id
     uint8_t   rtr;                             // rtr
-    uint8_t   SPICS;
-    SPIClass *pSPI;
     uint8_t   nReservedTx;                     // Count of tx buffers for reserved send
   	uint8_t   mcpMode;                         // Current controller mode
 
@@ -117,9 +115,7 @@
     uint8_t mcp2515_sendMsg(uint16_t id, uint8_t ext, uint8_t rtrBit, uint8_t len, const uint8_t *buf, bool wait_sent=true); // send message
 
 // public:
-    MCP_CAN(uint8_t _CS=0);
     void mcp2515_init_CS(uint8_t _CS);                      // define CS after construction before begin()
-    void mcp2515_setSPI(SPIClass *_pSPI) { pSPI=_pSPI; } // define SPI port to use before begin()
     void mcp2515_enableTxInterrupt(bool enable=true);    // enable transmit interrupt
     void mcp2515_reserveTxBuffers(uint8_t nTxBuf=0) { nReservedTx=(nTxBuf<MCP_N_TXBUFFERS?nTxBuf:MCP_N_TXBUFFERS-1); }
     uint8_t mcp2515_getLastTxBuffer() { return MCP_N_TXBUFFERS-1; } // read index of last tx buffer
@@ -127,10 +123,6 @@
     uint8_t mcp2515_begin(uint8_t speedset, const uint8_t clockset = MCP_16MHz);     // init can
     uint8_t mcp2515_init_Mask(uint8_t num, uint8_t ext, uint16_t ulData);       // init Masks
     uint8_t mcp2515_init_Filt(uint8_t num, uint8_t ext, uint16_t ulData);       // init filters
-    void mcp2515_setSleepWakeup(uint8_t enable);                               // Enable or disable the wake up interrupt (If disabled the MCP2515 will not be woken up by CAN bus activity, making it send only)
-	uint8_t mcp2515_sleep();													// Put the MCP2515 in sleep mode
-	uint8_t mcp2515_wake();													// Wake MCP2515 manually from sleep
-	uint8_t mcp2515_setMode(uint8_t opMode);                                      // Set operational mode
 	uint8_t mcp2515_getMode();				                                    // Get operational mode
 	uint8_t mcp2515_sendMsgBuf(uint16_t id, uint8_t ext, uint8_t rtrBit, uint8_t len, const uint8_t *buf, bool wait_sent=true);  // send buf
     uint8_t mcp2515_sendMsgBuf(uint16_t id, uint8_t ext, uint8_t len, const uint8_t *buf, bool wait_sent=true);               // send buf

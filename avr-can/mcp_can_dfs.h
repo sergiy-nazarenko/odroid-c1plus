@@ -50,6 +50,10 @@
 
 #include <inttypes.h>
 
+#define SPI_MOSI  B,5
+#define SPI_MISO  B,6
+#define SPI_SCK   B,7
+#define SPI_SS    B,4
 
 // if print debug information
 #ifndef DEBUG_EN
@@ -410,8 +414,8 @@
 #define MCP_RXBUF_0 (MCP_RXB0SIDH)
 #define MCP_RXBUF_1 (MCP_RXB1SIDH)
 
-#define MCP2515_SELECT()   digitalWrite(SPICS, LOW)
-#define MCP2515_UNSELECT() digitalWrite(SPICS, HIGH)
+#define MCP2515_SELECT()    SPI_SS |= (0<<SPI_SS);    
+#define MCP2515_UNSELECT()  SPI_SS |= (1<<SPI_SS); 
 
 #define MCP2515_OK         (0)
 #define MCP2515_FAIL       (1)
