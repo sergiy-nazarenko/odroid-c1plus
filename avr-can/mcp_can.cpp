@@ -327,10 +327,10 @@ void mcp2515_setSleepWakeup(const uint8_t enable)
 *********************************************************************************************************/
 uint8_t mcp2515_sleep() 
 {
-	if(getMode() != MODE_SLEEP)
-		return mcp2515_setCANCTRL_Mode(MODE_SLEEP);
-	else
-		return CAN_OK;
+    if(getMode() != MODE_SLEEP)
+        return mcp2515_setCANCTRL_Mode(MODE_SLEEP);
+    else
+        return CAN_OK;
 }
 
 /*********************************************************************************************************
@@ -339,11 +339,11 @@ uint8_t mcp2515_sleep()
 *********************************************************************************************************/
 uint8_t mcp2515_wake() 
 {
-	uint8_t currMode = getMode();
-	if(currMode != mcpMode)
-		return mcp2515_setCANCTRL_Mode(mcpMode);
-	else
-		return CAN_OK;
+    uint8_t currMode = mcp2515_getMode();
+    if(currMode != mcpMode)
+        return mcp2515_setCANCTRL_Mode(mcpMode);
+    else
+        return CAN_OK;
 }
 
 /*********************************************************************************************************
@@ -353,7 +353,7 @@ uint8_t mcp2515_wake()
 uint8_t mcp2515_setMode(const uint8_t opMode)
 {
     if(opMode != MODE_SLEEP) // if going to sleep, the value stored in opMode is not changed so that we can return to it later
-		mcpMode = opMode;
+        mcpMode = opMode;
     return mcp2515_setCANCTRL_Mode(opMode);
 }
 
@@ -363,7 +363,7 @@ uint8_t mcp2515_setMode(const uint8_t opMode)
 *********************************************************************************************************/
 uint8_t mcp2515_getMode()
 {
-	return mcp2515_readRegister(MCP_CANSTAT) & MODE_MASK;
+    return mcp2515_readRegister(MCP_CANSTAT) & MODE_MASK;
 }
 
 /*********************************************************************************************************
@@ -372,37 +372,37 @@ uint8_t mcp2515_getMode()
 *********************************************************************************************************/
 uint8_t mcp2515_setCANCTRL_Mode(const uint8_t newmode)
 {
-	// If the chip is asleep and we want to change mode then a manual wake needs to be done
-	// This is done by setting the wake up interrupt flag
-	// This undocumented trick was found at https://github.com/mkleemann/can/blob/master/can_sleep_mcp2515.c
-	if((getMode()) == MODE_SLEEP && newmode != MODE_SLEEP)	
-	{
-		// Make sure wake interrupt is enabled
-		uint8_t wakeIntEnabled = (mcp2515_readRegister(MCP_CANINTE) & MCP_WAKIF);
-		if(!wakeIntEnabled)
-			mcp2515_modifyRegister(MCP_CANINTE, MCP_WAKIF, MCP_WAKIF);
+    // If the chip is asleep and we want to change mode then a manual wake needs to be done
+    // This is done by setting the wake up interrupt flag
+    // This undocumented trick was found at https://github.com/mkleemann/can/blob/master/can_sleep_mcp2515.c
+    if((mcp2515_getMode()) == MODE_SLEEP && newmode != MODE_SLEEP)  
+    {
+        // Make sure wake interrupt is enabled
+        uint8_t wakeIntEnabled = (mcp2515_readRegister(MCP_CANINTE) & MCP_WAKIF);
+        if(!wakeIntEnabled)
+            mcp2515_modifyRegister(MCP_CANINTE, MCP_WAKIF, MCP_WAKIF);
 
-		// Set wake flag (this does the actual waking up)
-		mcp2515_modifyRegister(MCP_CANINTF, MCP_WAKIF, MCP_WAKIF);
+        // Set wake flag (this does the actual waking up)
+        mcp2515_modifyRegister(MCP_CANINTF, MCP_WAKIF, MCP_WAKIF);
 
-		// Wait for the chip to exit SLEEP and enter LISTENONLY mode.
+        // Wait for the chip to exit SLEEP and enter LISTENONLY mode.
 
-		// If the chip is not connected to a CAN bus (or the bus has no other powered nodes) it will sometimes trigger the wake interrupt as soon
-		// as it's put to sleep, but it will stay in SLEEP mode instead of automatically switching to LISTENONLY mode.
-		// In this situation the mode needs to be manually set to LISTENONLY.
+        // If the chip is not connected to a CAN bus (or the bus has no other powered nodes) it will sometimes trigger the wake interrupt as soon
+        // as it's put to sleep, but it will stay in SLEEP mode instead of automatically switching to LISTENONLY mode.
+        // In this situation the mode needs to be manually set to LISTENONLY.
 
-		if(mcp2515_requestNewMode(MODE_LISTENONLY) != MCP2515_OK)
-			return MCP2515_FAIL;
+        if(mcp2515_requestNewMode(MODE_LISTENONLY) != MCP2515_OK)
+            return MCP2515_FAIL;
 
-		// Turn wake interrupt back off if it was originally off
-		if(!wakeIntEnabled)
-			mcp2515_modifyRegister(MCP_CANINTE, MCP_WAKIF, 0);
-	}
+        // Turn wake interrupt back off if it was originally off
+        if(!wakeIntEnabled)
+            mcp2515_modifyRegister(MCP_CANINTE, MCP_WAKIF, 0);
+    }
 
-	// Clear wake flag
-	mcp2515_modifyRegister(MCP_CANINTF, MCP_WAKIF, 0);
+    // Clear wake flag
+    mcp2515_modifyRegister(MCP_CANINTF, MCP_WAKIF, 0);
 
-	return mcp2515_requestNewMode(newmode);
+    return mcp2515_requestNewMode(newmode);
 }
 
 /*********************************************************************************************************
@@ -411,21 +411,21 @@ uint8_t mcp2515_setCANCTRL_Mode(const uint8_t newmode)
 *********************************************************************************************************/
 uint8_t mcp2515_requestNewMode(const uint8_t newmode)
 {
-	uint16_t startTime = millis();
+    uint16_t startTime = millis();
 
-	// Spam new mode request and wait for the operation  to complete
-	while(1)
-	{
-		// Request new mode
-		// This is inside the loop as sometimes requesting the new mode once doesn't work (usually when attempting to sleep)
-		mcp2515_modifyRegister(MCP_CANCTRL, MODE_MASK, newmode); 
+    // Spam new mode request and wait for the operation  to complete
+    while(1)
+    {
+        // Request new mode
+        // This is inside the loop as sometimes requesting the new mode once doesn't work (usually when attempting to sleep)
+        mcp2515_modifyRegister(MCP_CANCTRL, MODE_MASK, newmode); 
 
-		uint8_t statReg = mcp2515_readRegister(MCP_CANSTAT);
-		if((statReg & MODE_MASK) == newmode) // We're now in the new mode
-			return MCP2515_OK;
-		else if((millis() - startTime) > 200) // Wait no more than 200ms for the operation to complete
-			return MCP2515_FAIL;
-	}
+        uint8_t statReg = mcp2515_readRegister(MCP_CANSTAT);
+        if((statReg & MODE_MASK) == newmode) // We're now in the new mode
+            return MCP2515_OK;
+        else if((millis() - startTime) > 200) // Wait no more than 200ms for the operation to complete
+            return MCP2515_FAIL;
+    }
 }
 
 /*********************************************************************************************************
@@ -1000,8 +1000,8 @@ uint8_t mcp2515_begin(uint8_t speedset, const uint8_t clockset)
 {
     pSPI->begin();
     uint8_t res = mcp2515_init(speedset, clockset);
-	
-	return ((res == MCP2515_OK) ? CAN_OK : CAN_FAILINIT);
+    
+    return ((res == MCP2515_OK) ? CAN_OK : CAN_FAILINIT);
 }
 
 /*********************************************************************************************************
@@ -1558,7 +1558,7 @@ bool mcpPinMode(const uint8_t pin, const uint8_t mode)
                     ret=false;
             }
             res = mcp2515_setCANCTRL_Mode(mcpMode);
-			if(res)
+            if(res)
             {
 #if DEBUG_EN
                 Serial.print("`Setting ID Mode Failure...\r\n");
