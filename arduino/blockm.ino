@@ -14,10 +14,6 @@ const int SPI_CS_PIN = 10;
 
 #define EPPROM_ADRESS 0xA0
 
-OneWire ds(8); //  Создаем объект OneWire для шины 1-Wire, с помощью которого будет осуществляться работа с датчиком
-
-MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
-
 #define RELAY_PORT PORTB
 #define RELAY_DDR DDRB
 #define RELAY_R_PIN 6
@@ -26,6 +22,12 @@ MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 #define FLOW_PIN 2
 #define FLOW_PORT PORTD
 #define FLOW_DDR DDRD
+
+#define DS18B20_PIN 8
+
+OneWire ds(DS18B20_PIN); //  Создаем объект OneWire для шины 1-Wire, с помощью которого будет осуществляться работа с датчиком
+
+MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 void EEPROM_WriteByte( byte Address, byte data)
 {
@@ -85,15 +87,15 @@ void setup()
     pinMode(FLOW_PIN, INPUT);           //Sets the pin as an input
     attachInterrupt(0, flow_pulse, RISING);  //Configures interrupt 0 (pin 2 on the Arduino Uno) to run the function "Flow"  
  
-    byte lo = EEPROM_ReadByte(0);
-    byte hi = EEPROM_ReadByte(1);
+    lo = EEPROM_ReadByte(0);
+    hi = EEPROM_ReadByte(1);
 
 
     flow_total_pulse_count = (lo << 8) | hi;
     storage_flowmeter = flow_total_pulse_count;
+
     //Serial.begin(115200);
     while (CAN_OK != CAN.begin(CAN_50KBPS, MCP_8MHz))                 // init can bus : baudrate = 500k
-
     //while (CAN_OK != CAN.begin(CAN_95K24BPS, MCP_8MHz))              // init can bus : baudrate = 500k
     {
         //Serial.println("CAN BUS Shield init fail");
@@ -159,11 +161,6 @@ void loop()
             }
 
 
-            if ( (recieve_can_buffer[7] >> 0) & 1UL)
-            {
-                can_buffer[3] = 0x00; 
-            }
-            
             if (((recieve_can_buffer[0] >> 0) & 1UL) && 
                     ((can_buffer[7] >> 0) & 1UL))
             { // inverse can_buffer[7] ^= 1UL << 0;
@@ -195,7 +192,7 @@ void loop()
     can_buffer[1] = hi;
 
     if((flow_total_pulse_count > storage_flowmeter) &&
-      (radio_delay >= 70))
+       (radio_delay >= 70))
     {
         storage_flowmeter = flow_total_pulse_count;
         EEPROM_WriteByte(0, lo);
