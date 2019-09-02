@@ -12,6 +12,8 @@
 // v0.9b and v1.0 is default D10
 const int SPI_CS_PIN = 10;
 
+#define EPPROM_ADRESS 0xA0
+
 OneWire ds(8); //  Создаем объект OneWire для шины 1-Wire, с помощью которого будет осуществляться работа с датчиком
 
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
@@ -27,7 +29,7 @@ MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
 void EEPROM_WriteByte( byte Address, byte data)
 {
-    Wire.beginTransmission(0xA0);
+    Wire.beginTransmission(EPPROM_ADRESS);
     Wire.write(Address);
     Wire.write(data);
     delay(5); //Не знаю точно, но в Datasheet описана задержка записи в 5мс, поправьте меня, если я не прав.
@@ -37,10 +39,10 @@ void EEPROM_WriteByte( byte Address, byte data)
 byte EEPROM_ReadByte(byte Address) 
 {
     byte rdata = 0xFF;
-    Wire.beginTransmission(0xA0);
+    Wire.beginTransmission(EPPROM_ADRESS);
     Wire.write(Address);
     Wire.endTransmission();
-    Wire.requestFrom(0xA0, 1);
+    Wire.requestFrom(EPPROM_ADRESS, 1);
     if (Wire.available()) rdata = Wire.read();
     return rdata;
 }
