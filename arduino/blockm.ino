@@ -11,8 +11,8 @@
 // the cs pin of the version after v1.1 is default to D9
 // v0.9b and v1.0 is default D10
 const int SPI_CS_PIN = 10;
-OneWire ds(8); //  Создаем объект OneWire для шины 1-Wire, с помощью которого будет осуществляться работа с датчиком
 
+OneWire ds(8); //  Создаем объект OneWire для шины 1-Wire, с помощью которого будет осуществляться работа с датчиком
 
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
@@ -116,7 +116,7 @@ void loop()
         unsigned int recieve_canid = CAN.getCanId();
         if(recieve_canid == 0x321)
         {
-            if (recieve_can_buffer[1] & (1<<0))
+            if ((recieve_can_buffer[1] >> 0) & 1UL )
             {
                 can_buffer[6] |= (1<<0);
                 can_buffer[6] &=~ (1<<1);
@@ -161,6 +161,7 @@ void loop()
             {
                 can_buffer[3] = 0x00; 
             }
+            
             if (((recieve_can_buffer[0] >> 0) & 1UL) && 
                     ((can_buffer[7] >> 0) & 1UL))
             { // inverse can_buffer[7] ^= 1UL << 0;
