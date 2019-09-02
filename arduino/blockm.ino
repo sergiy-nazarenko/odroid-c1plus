@@ -16,6 +16,11 @@ OneWire ds(8); //  Создаем объект OneWire для шины 1-Wire, �
 
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
+#define RELAY_PORT PORTB
+#define RELAY_DDR DDRB
+#define RELAY_R_PIN 6
+#define RELAY_L_PIN 7
+
 #define FLOW_PIN 2
 #define FLOW_PORT PORTD
 #define FLOW_DDR DDRD
@@ -41,12 +46,18 @@ byte EEPROM_ReadByte(byte Address)
 }
 
 volatile uint8_t radio_delay = 0;
+volatile uint8_t temperature_meter = 0;
 volatile uint16_t flow_total_pulse_count = 0;
 uint16_t storage_flowmeter = 0;
 unsigned char can_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 unsigned char recieve_can_len = 0;
 unsigned char recieve_can_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 byte lo, hi;
+unsigned int can_id = 0x123;
+unsigned int can_msg_size = 8;
+// send data:  id = 0x00, standrad frame, data len = 8, stmp: data buf
+    
+
 
 void flow_pulse()
 {
@@ -63,7 +74,6 @@ ISR(TIMER1_COMPA_vect)
 
 void setup()
 {
-  
     TCCR1B |= (1 << WGM12); // configure timer1 for CTC mode
     TIMSK1 |= (1 << OCIE1A); // enable the CTC interrupt
     sei();
@@ -89,15 +99,16 @@ void setup()
         delay(100);
     }
     //Serial.println("CAN BUS Shield init ok!");
+
+    temperature_meter = 0;
+    ds.reset(); // Начинаем взаимодействие со сброса всех предыдущих команд и параметров
+    ds.write(0xCC); // Даем датчику DS18b20 команду пропустить поиск по адресу. В нашем случае только одно устрйоство 
+    ds.write(0x44); // Даем датчику DS18b20 команду измерить температуру. Само значение температуры мы еще не получаем - датчик его положит во внутреннюю память
+    
 }
 
 void loop()
 {
-   unsigned int can_id = 0x123;
-   unsigned int can_msg_size = 8;
-    // send data:  id = 0x00, standrad frame, data len = 8, stmp: data buf
-    
-
     if(CAN_MSGAVAIL == CAN.checkReceive())            // check if data coming
     {
         CAN.readMsgBuf(&recieve_can_len, recieve_can_buffer);    // read data,  len: data length, buf: data buf
@@ -105,6 +116,47 @@ void loop()
         unsigned int recieve_canid = CAN.getCanId();
         if(recieve_canid == 0x321)
         {
+            if (recieve_can_buffer[1] & (1<<0))
+            {
+                can_buffer[6] |= (1<<0);
+                can_buffer[6] &=~ (1<<1);
+                can_buffer[6] &=~ (1<<2);
+                can_buffer[6] &=~ (1<<3);
+
+                if ( (recieve_can_buffer[1] >> 3) & 1UL )
+                {
+                    RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
+                    RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON
+                    can_buffer[6] |= (1<<3);
+                }
+                else if( (recieve_can_buffer[1] >> 1) & 1UL )
+                {
+                    RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
+                    RELAY_PORT |= (1<<RELAY_R_PIN); // OFF
+                    can_buffer[6] |= (1<<1);
+                }
+                else if ( (recieve_can_buffer[1] >> 2) & 1UL )
+                {
+                    RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON 
+                    RELAY_PORT |= (1<<RELAY_L_PIN); // OFF
+                    can_buffer[6] |= (1<<2);
+                }
+                else
+                {
+                    RELAY_PORT |= (1<<RELAY_L_PIN); // OFF
+                    RELAY_PORT |= (1<<RELAY_R_PIN); // OFF
+                }
+            }
+            else
+            {
+                RELAY_PORT &=~ (1<<RELAY_R_PIN);
+                RELAY_PORT &=~ (1<<RELAY_L_PIN);
+                can_buffer[6] &=~ (1<<0);
+                can_buffer[6] &=~ (1<<1);
+                can_buffer[6] &=~ (1<<2);
+            }
+
+
             if ( (recieve_can_buffer[7] >> 0) & 1UL)
             {
                 can_buffer[3] = 0x00; 
@@ -147,20 +199,19 @@ void loop()
         EEPROM_WriteByte(1, hi);
     }
  //////////////////////////////
-    if(temperature_meter >= 5)
+    if(temperature_meter >= 5) // delay(1000); // Микросхема измеряет температуру, а мы ждем.
     {
-        temperature_meter = 0;
-        ds.reset(); // Начинаем взаимодействие со сброса всех предыдущих команд и параметров
-        ds.write(0xCC); // Даем датчику DS18b20 команду пропустить поиск по адресу. В нашем случае только одно устрйоство 
-        ds.write(0x44); // Даем датчику DS18b20 команду измерить температуру. Само значение температуры мы еще не получаем - датчик его положит во внутреннюю память
-    else { // delay(1000); // Микросхема измеряет температуру, а мы ждем.  
-    
         ds.reset(); // Теперь готовимся получить значение измеренной температуры
         ds.write(0xCC); 
         ds.write(0xBE); // Просим передать нам значение регистров со значением температуры
         // Получаем и считываем ответ
         can_buffer[2] = ds.read(); // Читаем младший байт значения температуры
         can_buffer[3] = ds.read(); // А теперь старший
+
+        temperature_meter = 0;
+        ds.reset(); // Начинаем взаимодействие со сброса всех предыдущих команд и параметров
+        ds.write(0xCC); // Даем датчику DS18b20 команду пропустить поиск по адресу. В нашем случае только одно устрйоство 
+        ds.write(0x44); // Даем датчику DS18b20 команду измерить температуру. Само значение температуры мы еще не получаем - датчик его положит во внутреннюю память
     }
 /////////////////////////////////////////////
 
