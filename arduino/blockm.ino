@@ -54,6 +54,16 @@ volatile uint8_t temperature_meter = 0;
 volatile uint16_t flow_total_pulse_count = 0;
 uint16_t storage_flowmeter = 0;
 unsigned char can_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
+
+#define M_FLOW_LO 0
+#define M_FLOW_HI 1
+#define M_TEMPER_LO 2
+#define M_TEMPER_HI 3
+#define M_STATE 6
+#define M_VARS 7
+
+
 unsigned char recieve_can_len = 0;
 unsigned char recieve_can_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 byte lo, hi;
@@ -122,28 +132,28 @@ void loop()
         {
             if ((recieve_can_buffer[1] >> 0) & 1UL )
             {
-                can_buffer[6] |= (1<<0);
-                can_buffer[6] &=~ (1<<1);
-                can_buffer[6] &=~ (1<<2);
-                can_buffer[6] &=~ (1<<3);
+                can_buffer[M_STATE] |= (1<<0);
+                can_buffer[M_STATE] &=~ (1<<1);
+                can_buffer[M_STATE] &=~ (1<<2);
+                can_buffer[M_STATE] &=~ (1<<3);
 
                 if ( (recieve_can_buffer[1] >> 3) & 1UL )
                 {
                     RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
                     RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON
-                    can_buffer[6] |= (1<<3);
+                    can_buffer[M_STATE] |= (1<<3);
                 }
                 else if( (recieve_can_buffer[1] >> 1) & 1UL )
                 {
                     RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
                     RELAY_PORT |= (1<<RELAY_R_PIN); // OFF
-                    can_buffer[6] |= (1<<1);
+                    can_buffer[M_STATE] |= (1<<1);
                 }
                 else if ( (recieve_can_buffer[1] >> 2) & 1UL )
                 {
                     RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON 
                     RELAY_PORT |= (1<<RELAY_L_PIN); // OFF
-                    can_buffer[6] |= (1<<2);
+                    can_buffer[M_STATE] |= (1<<2);
                 }
                 else
                 {
@@ -155,16 +165,16 @@ void loop()
             {
                 RELAY_PORT &=~ (1<<RELAY_R_PIN);
                 RELAY_PORT &=~ (1<<RELAY_L_PIN);
-                can_buffer[6] &=~ (1<<0);
-                can_buffer[6] &=~ (1<<1);
-                can_buffer[6] &=~ (1<<2);
+                can_buffer[M_STATE] &=~ (1<<0);
+                can_buffer[M_STATE] &=~ (1<<1);
+                can_buffer[M_STATE] &=~ (1<<2);
             }
 
 
             if (((recieve_can_buffer[0] >> 0) & 1UL) && 
-                    ((can_buffer[7] >> 0) & 1UL))
+                    ((can_buffer[M_VARS] >> 0) & 1UL))
             { // inverse can_buffer[7] ^= 1UL << 0;
-                can_buffer[7] |= (1UL << 0);
+                can_buffer[M_VARS] |= (1UL << 0);
                 EEPROM_WriteByte(0, 0x00);
                 EEPROM_WriteByte(1, 0x00);
           //    EEPROM_WriteByte(2, 0x00);
@@ -181,22 +191,32 @@ void loop()
             }
             if ((recieve_can_buffer[0] >> 1) & 1UL)
             {
-                can_buffer[7] &= ~(1UL << 0);
+                can_buffer[M_VARS] &= ~(1UL << 0);
             }
         }  
     }
 
-    lo = flow_total_pulse_count >> 8;
-    hi = flow_total_pulse_count;
-    can_buffer[0] = lo;
-    can_buffer[1] = hi;
 
-    if((flow_total_pulse_count > storage_flowmeter) &&
-       (radio_delay >= 70))
+    if ( flow_total_pulse_count >= 0xFFFA )
     {
-        storage_flowmeter = flow_total_pulse_count;
-        EEPROM_WriteByte(0, lo);
-        EEPROM_WriteByte(1, hi);
+        can_buffer[M_STATE] |= (1<<4);
+        can_buffer[M_FLOW_LO] = 0xFF;
+        can_buffer[M_FLOW_HI] = 0xFF;
+    }
+    else
+    {
+        lo = flow_total_pulse_count >> 8;
+        hi = flow_total_pulse_count;
+        can_buffer[M_FLOW_LO] = lo;
+        can_buffer[M_FLOW_HI] = hi;
+
+        if((flow_total_pulse_count > storage_flowmeter) &&
+           (radio_delay >= 70))
+        {
+            storage_flowmeter = flow_total_pulse_count;
+            EEPROM_WriteByte(0, lo);
+            EEPROM_WriteByte(1, hi);
+        }
     }
  //////////////////////////////
     if(temperature_meter >= 5) // delay(1000); // Микросхема измеряет температуру, а мы ждем.
@@ -205,8 +225,8 @@ void loop()
         ds.write(0xCC); 
         ds.write(0xBE); // Просим передать нам значение регистров со значением температуры
         // Получаем и считываем ответ
-        can_buffer[2] = ds.read(); // Читаем младший байт значения температуры
-        can_buffer[3] = ds.read(); // А теперь старший
+        can_buffer[M_TEMPER_LO] = ds.read(); // Читаем младший байт значения температуры
+        can_buffer[M_TEMPER_HI] = ds.read(); // А теперь старший
 
         temperature_meter = 0;
         ds.reset(); // Начинаем взаимодействие со сброса всех предыдущих команд и параметров
