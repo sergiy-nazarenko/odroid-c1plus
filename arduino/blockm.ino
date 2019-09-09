@@ -43,20 +43,26 @@ uint16_t storage_flowmeter = 0;
 #define M_FLOW_HI 1
 #define M_TEMPER_LO 2
 #define M_TEMPER_HI 3
-#define M_WIPES_CNT 5
-#define M_STATE 6
-#define M_VARS 7
+#define M_WIPES_LO 5
+#define M_WIPES_HI 6
+#define M_STATE 7
 
 
+#define M_STAT_LIGHT_OFF 0
+#define M_STAT_LIGHT_R 1
+#define M_STAT_LIGHT_L 2
+#define M_STAT_LIGHT_ALARM 3
+#define M_STAT_LIGHT_FLOW 4
+#define M_STAT_LIGHT_DS18B20 5
+#define M_STAT_READY_TO_CLEAN 7
+
+uint16_t flow_clean_counter = 0;
 unsigned char recieve_can_len = 0;
 unsigned char recieve_can_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 byte lo, hi;
 unsigned int can_id = 0x123;
 unsigned int can_msg_size = 8;
 unsigned char can_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-unsigned int can2_id = 0x150;
-unsigned int can2_msg_size = 8;
-unsigned char can2_buffer[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 
 void flow_pulse()
@@ -72,7 +78,7 @@ ISR(TIMER1_COMPA_vect)
     temperature_meter++;
 }
 
-byte hilo[2] = { 0 };
+byte flow_state[6] = {0}; 
 
 void setup()
 {
@@ -107,9 +113,14 @@ void setup()
     sei();
     
     eeprom.initialize();
-    eeprom.readBytes(0, 2, hilo);
-    flow_total_pulse_count = (hilo[0] << 8) | hilo[1];
+    eeprom.readBytes(0, 6, flow_state);
+    flow_total_pulse_count = (flow_state[0] << 8) | flow_state[1];
     storage_flowmeter = flow_total_pulse_count;
+
+    flow_clean_counter = (flow_state[4] << 8) | flow_state[5];
+
+    can_buffer[M_WIPES_LO] = flow_state[4];
+    can_buffer[M_WIPES_HI]  = flow_state[5];
 }
 
 void loop()
@@ -123,28 +134,28 @@ void loop()
         {
             if ((recieve_can_buffer[1] >> 0) & 1UL )
             {
-                can_buffer[M_STATE] |= (1<<0);
-                can_buffer[M_STATE] &=~ (1<<1);
-                can_buffer[M_STATE] &=~ (1<<2);
-                can_buffer[M_STATE] &=~ (1<<3);
+                can_buffer[M_STATE] |= (1 << M_STAT_LIGHT_OFF);
+                can_buffer[M_STATE] &=~ (1 << M_STAT_LIGHT_R);
+                can_buffer[M_STATE] &=~ (1 << M_STAT_LIGHT_L);
+                can_buffer[M_STATE] &=~ (1 << M_STAT_LIGHT_ALARM);
 
                 if ( (recieve_can_buffer[1] >> 3) & 1UL )
                 {
                     RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
                     RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON
-                    can_buffer[M_STATE] |= (1<<3);
+                    can_buffer[M_STATE] |= ( 1 << M_STAT_LIGHT_ALARM );
                 }
                 else if( (recieve_can_buffer[1] >> 1) & 1UL )
                 {
                     RELAY_PORT &=~ (1<<RELAY_L_PIN); // ON
                     RELAY_PORT |= (1<<RELAY_R_PIN); // OFF
-                    can_buffer[M_STATE] |= (1<<1);
+                    can_buffer[M_STATE] |= ( 1 << M_STAT_LIGHT_L );
                 }
                 else if ( (recieve_can_buffer[1] >> 2) & 1UL )
                 {
                     RELAY_PORT &=~ (1<<RELAY_R_PIN); // ON 
                     RELAY_PORT |= (1<<RELAY_L_PIN); // OFF
-                    can_buffer[M_STATE] |= (1<<2);
+                    can_buffer[M_STATE] |= ( 1 << M_STAT_LIGHT_R );
                 }
                 else
                 {
@@ -156,61 +167,56 @@ void loop()
             {
                 RELAY_PORT &=~ (1<<RELAY_R_PIN);
                 RELAY_PORT &=~ (1<<RELAY_L_PIN);
-                can_buffer[M_STATE] &=~ (1<<0);
-                can_buffer[M_STATE] &=~ (1<<1);
-                can_buffer[M_STATE] &=~ (1<<2);
+                can_buffer[M_STATE] &=~ ( 1 << M_STAT_LIGHT_OFF );
+                can_buffer[M_STATE] &=~ ( 1 << M_STAT_LIGHT_R );
+                can_buffer[M_STATE] &=~ ( 1 << M_STAT_LIGHT_L );
             }
-
 
             if (!((recieve_can_buffer[0] >> 0) & 1UL))
             {
-              if(((can_buffer[M_VARS] >> 0) & 1UL))
-            { // inverse can_buffer[7] ^= 1UL << 0;
-                flow_total_pulse_count = 0;
-                byte flow_state[6] = {0};          
-                eeprom.readBytes(0, 6, flow_state);
-                // lo << 8 | hi
-                uint16_t flow_clean_counter = (flow_state[4] << 8) | flow_state[5];
-                if ( flow_clean_counter >= 0xFFFA )
-                {
-                  flow_clean_counter = 0;
+                if(((can_buffer[M_STATE] >> M_STAT_READY_TO_CLEAN) & 1UL))
+                { // inverse can_buffer[7] ^= 1UL << 0;
+                    flow_total_pulse_count = 0;
+
+                    eeprom.readBytes(0, 6, flow_state);
+                    // lo << 8 | hi
+                    flow_clean_counter = (flow_state[4] << 8) | flow_state[5];
+                    if ( flow_clean_counter >= 0xFFFA )
+                    {
+                      flow_clean_counter = 0;
+                    }
+                    flow_clean_counter++;
+                    can_buffer[M_WIPES_LO] = flow_clean_counter >> 8;
+                    can_buffer[M_WIPES_HI]  = flow_clean_counter;
+                                    
+                    flow_state[0] = 0x00;
+                    flow_state[1] = 0x00;
+                    flow_state[2] = 0x00;
+                    flow_state[3] = 0x00;
+                    flow_state[4] = 0x00;
+                    flow_state[5] = 0x00;
+                    
+                    eeprom.writeBytes(0, 6,  flow_state);
+                    can_buffer[M_STATE] &=~ (1UL << M_STAT_READY_TO_CLEAN);
                 }
-                flow_clean_counter++;
-                lo = flow_clean_counter >> 8;
-                hi = flow_clean_counter;
-                                
-                can2_buffer[0] = lo;
-                can2_buffer[1] = hi;
-                flow_state[0] = 0x00;
-                flow_state[1] = 0x00;
-                flow_state[2] = 0x00;
-                flow_state[3] = 0x00;
-                flow_state[4] = 0x00;
-                flow_state[5] = 0x00;
-                
-                eeprom.writeBytes(0, 6,  flow_state);
-                
-                can_buffer[M_VARS] &=~ (1UL << 0);
-                can_buffer[M_STATE] &=~ (1UL << 7);
-            }}
+            }
             if ((recieve_can_buffer[0] >> 0) & 1UL)
             {
-                can_buffer[M_VARS] |= (1UL << 0);
-                can_buffer[M_STATE] |= (1UL << 7);
+                can_buffer[M_STATE] |= (1UL << M_STAT_READY_TO_CLEAN);
             }
         }  
-    }
+    } // if(CAN_MSGAVAIL == CAN.checkReceive())
 
 
     if ( flow_total_pulse_count >= 0xFFFA )
     {
-        can_buffer[M_STATE] |= (1<<4);
+        can_buffer[M_STATE] |= ( 1 << M_STAT_LIGHT_FLOW );
         can_buffer[M_FLOW_LO] = 0xFF;
         can_buffer[M_FLOW_HI] = 0xFF;
     }
     else
     {
-      can_buffer[M_STATE] &=~ (1<<4);
+        can_buffer[M_STATE] &=~ ( 1 << M_STAT_LIGHT_FLOW );
         
         lo = flow_total_pulse_count >> 8;
         hi = flow_total_pulse_count;
@@ -229,7 +235,7 @@ void loop()
           radio_delay = 0;
         }
     }
- //////////////////////////////
+    //////////////////////////////
     if(temperature_meter >= 5) // delay(1000); // Микросхема измеряет температуру, а мы ждем.
     {
         ds.reset(); // Теперь готовимся получить значение измеренной температуры
@@ -238,7 +244,7 @@ void loop()
         // Получаем и считываем ответ
         can_buffer[M_TEMPER_LO] = ds.read(); // Читаем младший байт значения температуры
         can_buffer[M_TEMPER_HI] = ds.read(); // А теперь старший
-        can_buffer[M_STATE] &=~ (1<<5);
+        can_buffer[M_STATE] &=~ ( 1 << M_STAT_LIGHT_DS18B20 );
         
         temperature_meter = 0;
         ds.reset(); // Начинаем взаимодействие со сброса всех предыдущих команд и параметров
@@ -247,18 +253,13 @@ void loop()
     }
     else
     {
-      can_buffer[M_STATE] |= (1<<5);
+      can_buffer[M_STATE] |= ( 1 << M_STAT_LIGHT_DS18B20 );
     }
-/////////////////////////////////////////////
+    /////////////////////////////////////////////
 
     delay(100); 
 
     CAN.sendMsgBuf(can_id, 0, can_msg_size, can_buffer);
-
-    // delay(50);
-
-
-    CAN.sendMsgBuf(can2_id, 0, can2_msg_size, can2_buffer);
 }
 
 // END FILE
