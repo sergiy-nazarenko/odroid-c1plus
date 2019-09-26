@@ -14,6 +14,9 @@ import vectra_gui
 
 import pygame
 from pygame.locals import *
+from cd4051bm import CD4051BM
+
+cd40 = CD4051BM(23,27,24)
 
 
 CMDDUMPH = MENUDIR + os.sep + 'dump_hex.sh'
@@ -21,6 +24,10 @@ CMDDUMPL = MENUDIR + os.sep + 'dump_log.sh'
 CMDSNIFB = MENUDIR + os.sep + 'sniffer_binary.sh'
 CMDSNIFH = MENUDIR + os.sep + 'sniffer_hex.sh'
 CMDPLAYV = MENUDIR + os.sep + 'play_vcan.sh'
+
+CMD500 = MENUDIR + os.sep + 'can500kbps.sh'
+CMD95 = MENUDIR + os.sep + 'can95kbps.sh'
+CMD33 = MENUDIR + os.sep + 'can33kbps.sh'
 
 os.environ["SDL_FBDEV"] = "/dev/fb1"
 os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
@@ -226,7 +233,13 @@ a7 = Button("  >>>", (30, 385, 55, 110))
 a8 = Button(" Shutdown", (30, 130, 45, 170))
 a9 = Button("   Reboot", (30, 190, 45, 170))
 a10 = Button("Play VCAN", (30, 250, 45, 170))
+a11 = Button(" 500Kbps", (220, 130, 45, 170))
+a12 = Button(" 95Kbps", (220, 190, 45, 170))
+a13 = Button(" 33Kbps", (220, 250, 45, 170))
 
+a14 = Button(" 1x95 ", (410, 130, 45, 170))
+a15 = Button(" 2x95 ", (410, 190, 45, 170))
+a16 = Button(" 3x95 ", (410, 250, 45, 170))
 
 # Define each button press action
 def button1(self):
@@ -269,14 +282,32 @@ def button7(self):
     
 
 def button8(self):
-     command = "/usr/bin/sudo /sbin/shutdown -h now"
+     command = "/usr/bin/sudo /sbin/shutdown -h now > /home/odroid/shutdown.$RANDOM 2>$1"
      process = Popen(command.split(), stdout=PIPE)
      output = process.communicate()[0]
      return output
 
 
+def button11_500kbps(self):
+    pygame.quit()
+    run_cmd(CMD500)
+    os.execv(__file__, sys.argv)
+
+
+def button12_95kbps(self):
+    pygame.quit()
+    run_cmd(CMD95)
+    os.execv(__file__, sys.argv)
+
+
+def button13_33kbps(self):
+    pygame.quit()
+    run_cmd(CMD33)
+    os.execv(__file__, sys.argv)
+
+
 def button9(self):
-     command = "/usr/bin/sudo /sbin/shutdown -r now"
+     command = "/bin/dmesg > /home/odroid/dmesg.$RANDOM && /usr/bin/sudo /sbin/shutdown -r now"
      process = Popen(command.split(), stdout=PIPE)
      output = process.communicate()[0]
      return output
@@ -287,6 +318,9 @@ def button10_playv(self):
     run_cmd(CMDPLAYV)
     os.execv(__file__, sys.argv)
 
+x1_95 = lambda x: cd40.set(4)
+x2_95 = lambda x: cd40.set(7)
+x3_95 = lambda x: cd40.set(2)
 
 a1.click = types.MethodType(button1, a1)
 a3.click = types.MethodType(button3_snifb, a3)
@@ -299,6 +333,13 @@ a8.click = types.MethodType(button8, a8)
 a9.click = types.MethodType(button9, a9)
 a10.click = types.MethodType(button10_playv, a10)
 
+a11.click = types.MethodType(button11_500kbps, a11)
+a12.click = types.MethodType(button12_95kbps, a12)
+a13.click = types.MethodType(button13_33kbps, a13)
+
+a14.click = types.MethodType(x1_95, a14)
+a15.click = types.MethodType(x2_95, a15)
+a16.click = types.MethodType(x3_95, a16)
 
 font2_name = 'dejavusans'#k[font_index]
 
@@ -308,16 +349,20 @@ l10 = Label((390,170), 43, font=pygame.font.SysFont(font2_name,27))
 l9 = Label((280,220), 43, font=pygame.font.SysFont(font2_name,27))
 l8 = Label((280,270), 43, font=pygame.font.SysFont(font2_name,27))
 l11 = Label((650,340), 32, font=pygame.font.SysFont(font2_name,27))
-l2 = Label((300,30), 30)
 l12 = Label((230,340), 32, font=pygame.font.SysFont(font2_name,27))
 l0 = Label((10,10), 58, font=pygame.font.SysFont(font2_name,27))
 
 
+l2 = Label((240,30), 30, font=pygame.font.SysFont(font2_name,27))
+l22 = Label((248,60), 30, font=pygame.font.SysFont(font2_name,27))
+l23 = Label((241,90), 30, font=pygame.font.SysFont(font2_name,27))
+ 
+
 def get_text12(self):
-    return u"20 C"
+    return u"20ᵒ"
 
 def get_text0(self):
-    return u"%s     %s" % ('dejavusans', 5) # ( k[font_index], font_index)
+    return u"%s     %s" % (font2_name, 5) # ( k[font_index], font_index)
 
 def get_text1(self):
     return strftime("%d.%m.%Y", localtime())
@@ -335,16 +380,29 @@ def get_text11(self):
     return strftime("%H:%M:%S", localtime())
 
 def get_text2(self):
-    return 'CAN: %s' % globalcan.getData()[:3]
+    v = str(globalcan.getData()[1])
+    return u'coolant: %sᵒC' % v.rjust(6)
+
+def get_text22(self):
+    v = str(globalcan.getData()[2])
+    return u'    rpm: %s' % v.rjust(5)
+
+def get_text23(self):
+    v = str(globalcan.getData()[3])
+    return u'  speed:  %s' % v.rjust(5)
 
 l1.get_text = types.MethodType(get_text1, l1)
 l10.get_text = types.MethodType(get_text10, l10)
 l9.get_text = types.MethodType(get_text9, l9)
 l8.get_text = types.MethodType(get_text8, l8)
 l11.get_text = types.MethodType(get_text11, l11)
-l2.get_text = types.MethodType(get_text2, l2)
 l0.get_text = types.MethodType(get_text0, l0)
 l12.get_text = types.MethodType(get_text12, l12)
+
+
+l2.get_text = types.MethodType(get_text2, l2)
+l22.get_text = types.MethodType(get_text22, l22)
+l23.get_text = types.MethodType(get_text23, l23)
 
 n1 = Line((230,150),(750,150),4)
 n2 = Line((300,330),(680,330),4)
@@ -354,7 +412,7 @@ s1 = Screen()
 s1.attach(l1,a1,a3,a4,a41,a42,a5,l11,n1,l10,l9,l8,l0,n2,n3,l12)
 
 s2 = Screen()
-s2.attach(l2,a7,a8,a9,a10)
+s2.attach(l2,a7,a8,a9,a10,l22,l23,a11,a12,a13,a14,a15,a16)
 
 screens = [s1,s2]
 

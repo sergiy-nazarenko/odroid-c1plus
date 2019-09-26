@@ -661,19 +661,32 @@ static int mcp251x_set_normal_mode(struct spi_device *spi)
 
 static int mcp251x_do_set_bittiming(struct net_device *net)
 {
-	struct mcp251x_priv *priv = netdev_priv(net);
-	struct can_bittiming *bt = &priv->can.bittiming;
-	struct spi_device *spi = priv->spi;
+	u8 cnf_data[3];
+	if (!of_property_read_u8_array(node, "bit-timing", cnf_data, 3))
+	{
+	   	struct device *dev = &spi->dev;
+		struct device_node *node = dev->of_node;
 
-	mcp251x_write_reg(spi, CNF1, ((bt->sjw - 1) << CNF1_SJW_SHIFT) |
-			  (bt->brp - 1));
-	mcp251x_write_reg(spi, CNF2, CNF2_BTLMODE |
-			  (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES ?
-			   CNF2_SAM : 0) |
-			  ((bt->phase_seg1 - 1) << CNF2_PS1_SHIFT) |
-			  (bt->prop_seg - 1));
-	mcp251x_write_bits(spi, CNF3, CNF3_PHSEG2_MASK,
-			   (bt->phase_seg2 - 1));
+		mcp251x_write_reg(spi, CNF1, cnf_data[0]);
+		mcp251x_write_reg(spi, CNF2, cnf_data[1]);
+		mcp251x_write_reg(spi, CNF3, cnf_data[2]);
+	}
+	else
+	{
+		struct mcp251x_priv *priv = netdev_priv(net);
+		struct can_bittiming *bt = &priv->can.bittiming;
+		struct spi_device *spi = priv->spi;
+
+		mcp251x_write_reg(spi, CNF1, ((bt->sjw - 1) << CNF1_SJW_SHIFT) |
+				  (bt->brp - 1));
+		mcp251x_write_reg(spi, CNF2, CNF2_BTLMODE |
+				  (priv->can.ctrlmode & CAN_CTRLMODE_3_SAMPLES ?
+				   CNF2_SAM : 0) |
+				  ((bt->phase_seg1 - 1) << CNF2_PS1_SHIFT) |
+				  (bt->prop_seg - 1));
+		mcp251x_write_bits(spi, CNF3, CNF3_PHSEG2_MASK,
+				   (bt->phase_seg2 - 1));
+	}
 	dev_info(&spi->dev, "CNF: 0x%02x 0x%02x 0x%02x\n",
 		 mcp251x_read_reg(spi, CNF1),
 		 mcp251x_read_reg(spi, CNF2),
@@ -1135,7 +1148,14 @@ static int mcp251x_can_probe(struct spi_device *spi)
 			freq = pdata->oscillator_frequency;
 		else
 #if defined(CONFIG_MACH_MESON8B_ODROIDC)
-			freq = 16000000;
+		struct device *dev = &spi->dev;
+		struct device_node *node = dev->of_node;
+
+		int clk_osc = 0;
+		if (!of_property_read_u32(node, "clk-osc", &clk_osc))
+	    	freq = clk_osc * 1000 * 1000;
+	    else
+	        return PTR_ERR(clk);
 #else
 			return PTR_ERR(clk);
 #endif

@@ -1,0 +1,766 @@
+[    0.000000] Booting Linux on physical CPU 0x200
+[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Initializing cgroup subsys cpuacct
+[    0.000000] Linux version 3.10.107 (odroid@odroid) (gcc version 5.4.0 20160609 (Ubuntu/Linaro 5.4.0-6ubuntu1~16.04.5) ) #3 SMP PREEMPT Thu Jan 25 21:55:10 UTC 2018
+[    0.000000] Kernel was built at commit id '20e1fdd'
+[    0.000000] CPU: ARMv7 Processor [410fc051] revision 1 (ARMv7), cr=10c5387d
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] Machine: ODROIDC, model: AMLOGIC
+[    0.000000] physical memory start address is 0x200000
+[    0.000000] reserved_end is e3fffff 
+                
+[    0.000000] Total memory is 1022 MiB
+[    0.000000] Reserved low memory from 0x06000000 to 0x0e3fffff, size: 132 MiB 
+[    0.000000] 	mesonfb0(low)   	: 0x06100000 - 0x07900000 ( 24 MiB)
+[    0.000000] 	mesonfb1(low)   	: 0x07900000 - 0x07a00000 (  1 MiB)
+[    0.000000] 	mesonstream0(low)   	: 0x07a00000 - 0x09a00000 ( 32 MiB)
+[    0.000000] 	vdec0(low)   	: 0x09a00000 - 0x0da00000 ( 64 MiB)
+[    0.000000] 	ppmgr0(high)   	: 0x3f000000 - 0x40000000 ( 16 MiB)
+[    0.000000] 	deinterlace0(high)   	: 0x3cf00000 - 0x3f000000 ( 33 MiB)
+[    0.000000] 	amvideocap0(low)   	: 0x0da00000 - 0x0e400000 ( 10 MiB)
+[    0.000000] cma: CMA: reserved 8 MiB at 3c400000
+[    0.000000] cma: Found region@0, memory base 0, size 42 MiB
+[    0.000000] cma: CMA: reserved 44 MiB at 2cc00000
+[    0.000000] Memory policy: ECC disabled, Data cache writealloc
+[    0.000000] On node 0 totalpages: 211712
+[    0.000000] free_area_init_node: node 0, pgdat c09e2d80, node_mem_map c0c7c000
+[    0.000000]   Normal zone: 1520 pages used for memmap
+[    0.000000]   Normal zone: 0 pages reserved
+[    0.000000]   Normal zone: 157184 pages, LIFO batch:31
+[    0.000000]   HighMem zone: 426 pages used for memmap
+[    0.000000]   HighMem zone: 54528 pages, LIFO batch:15
+[    0.000000] Meson chip version = RevA (1B:A - 0:B72)
+[    0.000000] PERCPU: Embedded 8 pages/cpu @c1426000 s8512 r8192 d16064 u32768
+[    0.000000] pcpu-alloc: s8512 r8192 d16064 u32768 alloc=8*4096
+[    0.000000] pcpu-alloc: [0] 0 [0] 1 [0] 2 [0] 3 
+[    0.000000] Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 210192
+[    0.000000] Kernel command line: root=UUID=e139ce78-9841-40fe-8823-96a304a09859 rootwait ro console=tty0 console=ttyS0,115200n8 no_console_suspend fsck.repair=yes vdaccfg=0xa000 logo=osd1,loaded,0x7900000,720p,full dmfc=3 cvbsmode=576cvbs hdmimode=800x480p60hz m_bpp=32 vout=dvi disableuhs disablehpd=true monitor_onoff=false max_freq=1536 usbhid.quirks=0x0eef:0x0005:0x0004
+[    0.000000] cvbs trimming line = 0xa000
+[    0.000000] cvbs trimming.1.v5: 0xa0, 0x0
+[    0.000000] osd1:1
+[    0.000000] loaded:268435459
+[    0.000000] logo has been loaded
+[    0.000000] 720p:12
+[    0.000000] full:2
+[    0.000000] kernel get cvbsmode form uboot is 576cvbs
+[    0.000000] kernel get hdmimode form uboot is 800x480p60hz
+[    0.000000] PID hash table entries: 4096 (order: 2, 16384 bytes)
+[    0.000000] Dentry cache hash table entries: 131072 (order: 7, 524288 bytes)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 6, 262144 bytes)
+[    0.000000] allocated 1992704 bytes of page_cgroup
+[    0.000000] please try 'cgroup_disable=memory' option if you don't want memory cgroups
+[    0.000000] Memory: 64MB 16MB 747MB = 827MB total
+[    0.000000] Memory: 760944k/760944k available, 85904k reserved, 209920K highmem
+[    0.000000] Virtual kernel memory layout:
+                   vector  : 0xffff0000 - 0xffff1000   (   4 kB)
+                   fixmap  : 0xfff00000 - 0xfffe0000   ( 896 kB)
+                   vmalloc : 0xf0000000 - 0xff000000   ( 240 MB)
+                   lowmem  : 0xc0000000 - 0xef800000   ( 760 MB)
+                   pkmap   : 0xbfe00000 - 0xc0000000   (   2 MB)
+                   modules : 0xbf000000 - 0xbfe00000   (  14 MB)
+                     .text : 0xc0008000 - 0xc0934bac   (9395 kB)
+                     .init : 0xc0935000 - 0xc096d140   ( 225 kB)
+                     .data : 0xc096e000 - 0xc09e3cc0   ( 472 kB)
+                      .bss : 0xc09e3cc0 - 0xc0c7767c   (2639 kB)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] Preemptible hierarchical RCU implementation.
+[    0.000000] NR_IRQS:256
+[    0.000000] sched_clock: 32 bits at 1000kHz, resolution 1000ns, wraps every 4294967ms
+[    0.000000] Global timer: MESON TIMER-F (c0989440) initialized
+[    0.000000] Switching to timer-based delay loop
+[    0.000000] Console: colour dummy device 80x30
+[    0.000000] console [tty0] enabled
+[    0.000000] meson_serial_console_setup
+[    0.000000] console [ttyS0] enabled
+[    0.379094] Calibrating delay loop (skipped), value calculated using timer frequency.. 2.00 BogoMIPS (lpj=10000)
+[    0.389367] pid_max: default: 32768 minimum: 301
+[    0.394366] Security Framework initialized
+[    0.398410] AppArmor: AppArmor initialized
+[    0.402744] Mount-cache hash table entries: 512
+[    0.412399] Initializing cgroup subsys memory
+[    0.412506] Initializing cgroup subsys devices
+[    0.416389] Initializing cgroup subsys freezer
+[    0.421036] Initializing cgroup subsys blkio
+[    0.425389] Initializing cgroup subsys perf_event
+[    0.430428] CPU: Testing write buffer coherency: ok
+[    0.435719] CPU0: thread -1, cpu 0, socket 2, mpidr 80000200
+[    0.441212] Setting up static identity map for 0xc0697ca0 - 0xc0697cf8
+[    0.447853] L310 cache controller enabled
+[    0.451936] l2x0: 8 ways, 2048 sets, CACHE_ID 0x4100a0c9,  Cache size: 524288 B
+[    0.459333]       AUX_CTRL 0x7ec60001, PERFETCH_CTRL 0x75000007, POWER_CTRL  0x00000000
+[    0.467485]       TAG_LATENCY 0x00000111, DATA_LATENCY 0x00000222
+[    0.550332] CPU1: Booted secondary processor
+[    0.550354] CPU1: thread -1, cpu 1, socket 2, mpidr 80000201
+[    0.570336] CPU2: Booted secondary processor
+[    0.570348] CPU2: thread -1, cpu 2, socket 2, mpidr 80000202
+[    0.590330] CPU3: Booted secondary processor
+[    0.590343] CPU3: thread -1, cpu 3, socket 2, mpidr 80000203
+[    0.590430] Brought up 4 CPUs
+[    0.618618] SMP: Total of 4 processors activated (8.00 BogoMIPS).
+[    0.624849] CPU: All CPU(s) started in SVC mode.
+[    0.630317] devtmpfs: initialized
+[    0.639782] clkrate [ xtal 	] : 24000000
+[    0.639826] clkrate [ pll_sys 	] : 1200000000
+[    0.642781] clkrate [ pll_fixed 	] : 2550000000
+[    0.647433] clkrate [ pll_vid 	] : 732000000
+[    0.651861] clkrate [ pll_ddr 	] : 0
+[    0.655572] clkrate [ a9_clk 	] : 1200000000
+[    0.659988] clkrate [ clk81 	] : 159375000
+[    0.664615] pinctrl core: initialized pinctrl subsystem
+[    0.669801] regulator-dummy: no parameters
+[    0.675823] NET: Registered protocol family 16
+[    0.682869] DMA: preallocated 4096 KiB pool for atomic coherent allocations
+[    0.686700] VPU driver version: v02
+[    0.689169] load vpu_clk in dts: 182150000Hz(3)
+[    0.693896] vpu_probe OK
+[    0.696740] cma: Assigned CMA region with name cma_0 to amvenc_avc.0 device
+[    0.705435] amlogic_gpio gpio: Probed amlogic GPIO driver
+[    0.709616] register lm device lm-root
+[    0.713117] register lm device lm1
+[    0.716645] register lm device lm0
+[    0.720242] hw-breakpoint: found 2 (+1 reserved) breakpoint and 1 watchpoint registers.
+[    0.728314] hw-breakpoint: maximum watchpoint size is 4 bytes.
+[    0.734397] Init pinux probe!
+[    0.738119] pinmux-m8b pinmux: Probed amlogic pinctrl driver
+[    0.743253] tv_init_module
+[    0.746066] major number 254 for disp
+[    0.749865] vout_register_server
+[    0.753255] register tv module server ok
+[    0.757369] call aml_dvfs_init in
+[    0.760837] [DVFS]aml_dvfs_probe, child name:vcck_dvfs
+[    0.760849] [DVFS]dvfs table of vcck_dvfs is:
+[    0.760857] [DVFS]     freq,    min_uV,    max_uV
+[    0.760864] [DVFS]    96000,    825000,    825000
+[    0.760870] [DVFS]   192000,    825000,    825000
+[    0.760877] [DVFS]   312000,    825000,    825000
+[    0.760883] [DVFS]   408000,    825000,    825000
+[    0.760890] [DVFS]   504000,    825000,    825000
+[    0.760896] [DVFS]   600000,    825000,    825000
+[    0.760903] [DVFS]   720000,    825000,    825000
+[    0.760909] [DVFS]   816000,    850000,    850000
+[    0.760916] [DVFS]  1008000,    875000,    875000
+[    0.760922] [DVFS]  1200000,    925000,    925000
+[    0.760929] [DVFS]  1320000,   1100000,   1100000
+[    0.760935] [DVFS]  1488000,   1100000,   1100000
+[    0.760942] [DVFS]  1536000,   1140000,   1140000
+[    0.760949] [DVFS]  1632000,   1140000,   1140000
+[    0.760955] [DVFS]  1728000,   1140000,   1140000
+[    0.760962] [DVFS]  1824000,   1140000,   1140000
+[    0.761037] hdmitx: system: amhdmitx_init
+[    0.764932] hdmitx: system: Ver: 2014May6
+[    0.769142] hdmitx: system: amhdmitx_probe
+[    0.773623] hdmitx: system: gate/pwr cmd: 7
+[    0.777663] hdmitx: system: ALREADY init VIC = 4
+[    0.782440] hdmitx: system: gate/pwr cmd: 0
+[    0.787190] hdmitx: system: reset intr mask
+[    0.810392] hdmitx: system: irq 1
+[    0.817682] bio: create slab <bio-0> at 0
+[    0.818363] SCSI subsystem initialized
+[    0.820331] usbcore: registered new interface driver usbfs
+[    0.825814] usbcore: registered new interface driver hub
+[    0.831328] usbcore: registered new device driver usb
+[    0.836487] media: Linux media interface: v0.10
+[    0.841141] Linux video capture interface: v2.00
+[    0.846277] switch_vpu_mem_pd: unsupport vpu mod
+[    0.850643] unsupport vmod
+[    0.853470] TV mode 800x480p60hz selected.
+[    0.857717] tvoutc_setmode[461]
+[    0.861023] aml_logo: outputmode changed(12->15), reset osd1 scaler.
+[    0.880952] get property:                  use_pwm, value:0x00000001, dec:       1
+[    0.883083] get property:              table_count, value:0x0000001d, dec:      29
+[    0.890799] meson_cs_dvfs_probe, table count:29, use_pwm:1, pwm controller:2
+[    0.897965]  0, 010f001b,  860000
+[    0.901432]  1, 01050025,  870000
+[    0.904884]  2, 00fc002e,  880000
+[    0.908347]  3, 00f30037,  890000
+[    0.911821]  4, 00ea0040,  900000
+[    0.915274]  5, 00e10049,  910000
+[    0.918737]  6, 00d60054,  920000
+[    0.922212]  7, 00cb005f,  930000
+[    0.925665]  8, 00c0006a,  940000
+[    0.929127]  9, 00b50075,  950000
+[    0.932604] 10, 00aa0080,  960000
+[    0.936058] 11, 00a0008a,  970000
+[    0.939519] 12, 00960094,  980000
+[    0.942993] 13, 008d009d,  990000
+[    0.946446] 14, 007b00af, 1000000
+[    0.949909] 15, 007200b8, 1010000
+[    0.953384] 16, 006900c1, 1020000
+[    0.956836] 17, 006000ca, 1030000
+[    0.960311] 18, 005700d3, 1040000
+[    0.963764] 19, 004e00dc, 1050000
+[    0.967227] 20, 004500e5, 1060000
+[    0.970702] 21, 003c00ee, 1070000
+[    0.974154] 22, 003300f7, 1080000
+[    0.977617] 23, 002a0100, 1090000
+[    0.981092] 24, 00180109, 1100000
+[    0.984545] 25, 000f011b, 1110000
+[    0.988008] 26, 000a0120, 1120000
+[    0.991483] 27, 00050125, 1130000
+[    0.994935] 28, 0000012a, 1140000
+[    0.998442] get pin for pwm--------
+[    1.002055] [DVFS]aml_dvfs_register_driver, driver meson-cs-dvfs regist success, mask:1, source id:1
+[    1.002275] Advanced Linux Sound Architecture Driver Initialized.
+[    1.008691] Bluetooth: Core ver 2.16
+[    1.012054] NET: Registered protocol family 31
+[    1.016586] Bluetooth: HCI device and connection manager initialized
+[    1.023103] Bluetooth: HCI socket layer initialized
+[    1.028107] Bluetooth: L2CAP socket layer initialized
+[    1.033330] Bluetooth: SCO socket layer initialized
+[    1.038469] Loading modules backported from Linux version next-20150129-0-g828f79f
+[    1.046052] Backport integrated by backports.git backports-20150129-0-gdd4a670
+[    1.053622] cfg80211: Calling CRDA to update world regulatory domain
+[    1.060653] Switching to clocksource Timer-E
+[    1.064602] AppArmor: AppArmor Filesystem Enabled
+[    1.076483] NET: Registered protocol family 2
+[    1.077217] TCP established hash table entries: 8192 (order: 4, 65536 bytes)
+[    1.082695] TCP bind hash table entries: 8192 (order: 4, 65536 bytes)
+[    1.089299] TCP: Hash tables configured (established 8192 bind 8192)
+[    1.095733] TCP: reno registered
+[    1.099038] UDP hash table entries: 512 (order: 2, 16384 bytes)
+[    1.105139] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes)
+[    1.111829] NET: Registered protocol family 1
+[    1.116310] Unpacking initramfs...
+[    1.606617] Freeing initrd memory: 9004K (c4e09000 - c56d4000)
+[    1.607746] hw perfevents: enabled with ARMv7 Cortex-A9 PMU driver, 3 counters available
+[    1.615829] audit: initializing netlink socket (disabled)
+[    1.620809] type=2000 audit(1.530:1): initialized
+[    1.626384] bounce pool size: 64 pages
+[    1.634682] VFS: Disk quotas dquot_6.5.2
+[    1.634959] Dquot-cache hash table entries: 1024 (order 0, 4096 bytes)
+[    1.642093] aufs 3.10.x
+[    1.642866] msgmni has been set to 1181
+[    1.648338] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 249)
+[    1.654589] io scheduler noop registered
+[    1.658439] io scheduler deadline registered
+[    1.662981] io scheduler cfq registered (default)
+[    1.711446] [drm] Initialized drm 1.1.0 20060810
+[    1.711623] gpu cooling register okay with err=0
+[    1.718267] Mali: Mali device driver loaded
+[    1.719853] UMP: UMP device driver -jenkins-deb_kernel_c1-191 loaded
+[    1.729050] loop: module loaded
+[    1.729992] tun: Universal TUN/TAP device driver, 1.6
+[    1.734715] tun: (C) 1999-2004 Max Krasnyansky <maxk@qualcomm.com>
+[    1.741143] PPP generic driver version 2.4.2
+[    1.745797] usbcore: registered new interface driver usb-storage
+[    1.751681] usbcore: registered new interface driver usbserial
+[    1.757610] usbcore: registered new interface driver usbserial_generic
+[    1.764253] usbserial: USB Serial support registered for generic
+[    1.770619] mousedev: PS/2 mouse device common for all mice
+[    1.776363] i2c /dev entries driver
+[    1.780069] device-mapper: uevent: version 1.0.3
+[    1.784784] device-mapper: ioctl: 4.24.0-ioctl (2013-01-15) initialised: dm-devel@redhat.com
+[    1.793193] Bluetooth: HCI UART driver ver 2.2
+[    1.797658] Bluetooth: HCI H4 protocol initialized
+[    1.802573] Bluetooth: HCI BCSP protocol initialized
+[    1.807696] Bluetooth: HCILL protocol initialized
+[    1.812531] Bluetooth: HCIATH3K protocol initialized
+[    1.817655] Bluetooth: HCI Three-wire UART (H5) protocol initialized
+[    1.824702] ledtrig-cpu: registered to indicate activity on CPUs
+[    1.830345] hidraw: raw HID events driver (C) Jiri Kosina
+[    1.836093] usbcore: registered new interface driver usbhid
+[    1.841542] usbhid: USB HID core driver
+[    1.845749] efuse===========================================
+[    1.851459] efuse: device efuse created
+[    1.855376] efuse--------------------------------------------
+[    1.861196] vout_init_module
+[    1.864256] start init vout module 
+[    1.867998] create  vout attribute ok 
+[    1.871995] ge2d_init
+[    1.874377] ge2d_dev major:244
+[    1.877792] ge2d start monitor
+[    1.881025] osd_init
+[    1.881038] ge2d workqueue monitor start
+[    1.887490] osd_probe, vinfo:c06d8440
+[    1.891548] Frame buffer memory assigned at phy:0x06100000, vir:0xf1000000, size=24576K
+[    1.899416] osd_probe, mydef_var:c09bc6a4, vinfo:c06d8440
+[    1.904947] init fbdev bpp is :32
+[    1.908469] ---------------clear framebuffer0 memory  
+[    1.936601] Console: switching to colour frame buffer device 160x90
+[    1.949883] Frame buffer memory assigned at phy:0x07900000, vir:0xf0600000, size=1024K
+[    1.957882] osd_probe, mydef_var:c09bc6a4, vinfo:c06d8440
+[    1.963372] don't find to display_size_default from mesonfb-dts
+[    1.969456] init fbdev bpp is :24
+[    1.973327] osd probe ok  
+[    1.975920] hdmitx: video: get current mode: 800x480p60hz
+[    1.981476] hdmitx: video: get current mode: 800x480p60hz
+[    1.987032] hdmitx: system: gate/pwr cmd: 7
+[    1.991370] hdmitx: system: already init VIC = 0  Now VIC = 73
+[    1.997340] hdmitx: system:  73 (cd0,cs0,pm1,vd0,1) 
+[    2.002418] hdmitx: system: gate/pwr cmd: 0
+[    2.006752] hdmitx: system: hw reset
+[    2.011497] hdmitx: audio: SPDIF
+[    2.013878] reconfig packet setting done
+[    2.037905] hdmitx: system: set pll
+[    2.037976] hdmitx: system: param->VIC:73
+[    2.040144] mode is: 15
+[    2.042718] VPU_VIU_VENC_MUX_CTRL: 0xa
+[    2.046647] viu chan = 1
+[    2.049305] VPU_VIU_VENC_MUX_CTRL: 0xa
+[    2.053214] config HPLL
+[    2.074348] config HPLL done
+[    2.074417] enc_vpu_bridge_reset[314]
+[    2.214346] hdmitx: system: phy setting done
+[    2.214433] hdmi: fixing to DVI mode
+[    2.216921] hdmi: Sink is DVI device
+[    2.220648] hdmi: No sink attached
+[    2.224230] hdmitx: audio: audio channel num is 0
+[    2.229086] hdmitx: audio: SPDIF
+[    2.232426] hdmitx: audio: current VIC: 73
+[    2.236686] hdmitx: audio: audio sample rate: 0
+[    2.241351] hdmitx: audio: reset audio N para
+[    2.245876] hdmitx: audio: PCM out to HDMI
+[    2.262520] hdmitx: audio: Time out: AIU_HDMI_CLK_DATA_CTRL
+[    2.262693] hdmitx: audio: i2s_to_spdif_flag:1 
+[    2.267370] hdmitx: audio: Enable audio spdif to HDMI
+[    2.310531] amlvideo-000: V4L2 device registered as video10
+[    2.310951] ionvideo-000: V4L2 device registered as video13
+[    2.316479] Video Technology Magazine Ion Video Capture Board ver 1.0 successfully loaded.
+[    2.324872] DI: di_init
+[    2.324917] DI: di_probe
+[    2.325277] aml_wdt_driver_init,306
+[    2.328445] ** disable watchdog
+[    2.331818] one-secod=7812,min_timeout=1,max_timeout=8,default_timeout=10,reset_watchdog_method=0,reset_watchdog_time=2,shutdown_timeout=10,firmware_timeout=6,suspend_timeout=6
+[    2.347993] AML Watchdog Timer probed done 
+[    2.352205] set uart_ao pinmux use pinctrl subsystem
+[    2.357084] P_AO_RTI_PIN_MUX_REG:11801
+[    2.360934] start uart_ao_ttyS0:(irq = 122)
+[    2.365287] register uart_ao ok
+[    2.368748] set uart_b pinmux use pinctrl subsystem
+[    2.373564] P_AO_RTI_PIN_MUX_REG:11801
+[    2.380977] start uart_b_ttyS2:(irq = 107)
+[    2.385143] register uart_b ok
+[    2.388694] dwc_otg: version 3.10a 12-MAY-2014
+[    2.392929] dwc_otg_driver_probe NOT match
+[    2.437196] usb1: type: 1, speed: 0, config: 0, dma: 0, id: 1, phy: fe108820, ctrl: fe080000
+[    2.443746] USB (1) use clock source: XTAL input
+[    2.469661] Core Release: 3.10a
+[    2.473247] Setting default values for core params
+[    2.476882] curmode: 1, host_only: 1
+[    2.500587] Using Buffer DMA mode
+[    2.504121] OTG VER PARAM: 1, OTG VER FLAG: 1
+[    2.507678] Working on port type = HOST
+[    2.511391] dwc_otg lm1: DWC OTG Controller
+[    2.514968] dwc_otg lm1: new USB bus registered, assigned bus number 1
+[    2.521526] dwc_otg lm1: irq 63, io mem 0x00000000
+[    2.526442] -------hcd->flags.d32 = 0
+[    2.530242] Init: Port Power? op_state=1
+[    2.534291] Init1: Power Port (0)
+[    2.538335] hub 1-0:1.0: USB hub found
+[    2.541894] hub 1-0:1.0: 1 port detected
+[    2.545969] usb0: type: 0, speed: 0, config: 0, dma: 0, id: 0, phy: fe108800, ctrl: fe040000
+[    2.554471] USB (0) use clock source: XTAL input
+[    2.580263] Core Release: 3.10a
+[    2.583896] Setting default values for core params
+[    2.587560] curmode: 1, host_only: 0
+[    2.651262] Using Buffer DMA mode
+[    2.654842] OTG VER PARAM: 1, OTG VER FLAG: 1
+[    2.658386] Working on port type = OTG
+[    2.661915] Current port type: SLAVE
+[    2.665632] dwc_otg lm0: DWC OTG Controller
+[    2.669155] dwc_otg lm0: new USB bus registered, assigned bus number 2
+[    2.675850] dwc_otg lm0: irq 62, io mem 0x00000000
+[    2.681157] hub 2-0:1.0: USB hub found
+[    2.684646] hub 2-0:1.0: 1 port detected
+[    2.688790] Dedicated Tx FIFOs mode
+[    2.692641] using timer detect id change, ec8ee800
+[    2.697463] ethernet_driver probe!
+[    2.700923] ethernetinit(dbg[c09c12d4]=1)
+[    2.704995] ethernet base addr is fe0c0000
+[    2.709205] write mac add to:c521d248: 00 1e 06 11 40 53 |..@S|
+[    2.715505] HOST mode
+[    2.722646] libphy: AMLMAC MII Bus: probed
+[    2.726218] eth0: PHY ID 001cc916 at 0 IRQ -1 (0:00) active
+[    2.730509] eth0: PHY ID 001cc916 at 1 IRQ -1 (0:01) active
+[    2.736391] amvideocap_init_module
+[    2.740021] amvideocap_probe,amvideocap
+[    2.743738] amvideocap_dev_register buf:0da00000,size:a00000.
+[    2.744379] -------hcd->flags.d32 = 0
+[    2.744402] Init: Port Power? op_state=1
+[    2.744404] Init1: Power Port (0)
+[    2.744407] set usb port power on (board gpio 5)!
+[    2.765944] Indeed it is in host mode hprt0 = 00021501
+[    2.766133] Amlogic A/V streaming port init
+[    2.767316] init vdec memsource 9a00000->d9fffff
+[    2.767412] [tsync_pcr_init]init success. 
+[    2.767457] regist mpeg12 codec profile
+[    2.767499] regist mpeg4 codec profile
+[    2.767501] amvdec_vc1 module init
+[    2.767542] regist vc1 codec profile
+[    2.767544] amvdec_h264 module init
+[    2.767615] regist h264 codec profile
+[    2.767617] amvdec_h265 module init
+[    2.767660] regist hevc codec profile
+[    2.767702] regist mjpeg codec profile
+[    2.767704] amvdec_real module init
+[    2.767746] regist real codec profile
+[    2.767748] amvdec_avs module init
+[    2.767865] amvenc_avc memory resource undefined.
+[    2.767866] encode_wq_init.
+[    2.767871] encode start monitor.
+[    2.767986] encode workqueue monitor start.
+[    2.768182] regist avc codec profile
+[    2.768185] jpegenc module init
+[    2.768397] alloc_keep_buffer keep_y_addr ebe00000
+[    2.768469] alloc_keep_buffer keep_u_addr c5400000
+[    2.768503] alloc_keep_buffer keep_v_addr c5380000
+[    2.768523] yaddr=ebe00000,u_addr=c5400000,v_addr=c5380000
+[    2.768830] create_ge2d_work_queue video task ok 
+[    2.769020] SARADC Driver init.
+[    2.769134] __saradc_probe__
+[    2.914481] saradc calibration: ref_val = 516
+[    2.917674] saradc calibration: ref_nominal = 512
+[    2.921354] saradc calibration: coef = 4120
+[    2.925915] ir irblaster probe
+[    2.929185] Remote Driver
+[    2.932315] ==touch_ts_init==
+[    2.935467] ==ft5x0x_ts_init==
+[    2.938492] ==goodix_ts_init==
+[    2.941496] i2c-core: driver [gslx680_compatible] using legacy suspend method
+[    2.948377] i2c-core: driver [gslx680_compatible] using legacy resume method
+[    2.955555] !!!ntp_ts: ret = 0. 
+[    2.958873] VTL ct36x TouchScreen driver, <george.chen@vtl.com.cn>.
+[    2.965384] i2c-core: driver [ct36x] using legacy suspend method
+[    2.971494] i2c-core: driver [ct36x] using legacy resume method
+[    2.977536] VTL ct36x TouchScreen driver End.
+[    2.982017] ==gsl_ts_init==
+[    2.985077] ret=0
+[    2.988234] i2c-core: driver [mir3da] using legacy suspend method
+[    2.993321] i2c-core: driver [mir3da] using legacy resume method
+[    2.999506] i2c-core: driver [lis3dh_acc] using legacy suspend method
+[    3.006030] i2c-core: driver [lis3dh_acc] using legacy resume method
+[    3.012495] i2c-core: driver [bma222] using legacy suspend method
+[    3.018697] i2c-core: driver [bma222] using legacy resume method
+[    3.024882] i2c-core: driver [dmard06] using legacy suspend method
+[    3.031131] i2c-core: driver [dmard06] using legacy resume method
+[    3.037394] lsm303d driver: init
+[    3.040759] i2c-core: driver [dmard10] using legacy suspend method
+[    3.047105] i2c-core: driver [dmard10] using legacy resume method
+[    3.053338] stk8313_init
+[    3.054369] usb 1-1: new high-speed USB device number 2 using dwc_otg
+[    3.054631] Indeed it is in host mode hprt0 = 00001101
+[    3.067959] ======stk831x init ok======
+[    3.071869] stk831x_init
+[    3.074907] mxc622x accelerometer driver: init
+[    3.079188] i2c-core: driver [mxc622x] using legacy suspend method
+[    3.085533] i2c-core: driver [mxc622x] using legacy resume method
+[    3.091729] mxc6255xc accelerometer driver: init
+[    3.096543] i2c-core: driver [mxc6255xc] using legacy suspend method
+[    3.103049] i2c-core: driver [mxc6255xc] using legacy resume method
+[    3.109511] cm3217 v.1.0.0.1
+[    3.112571] i2c-core: driver [elan_epl6814] using legacy suspend method
+[    3.119254] i2c-core: driver [elan_epl6814] using legacy resume method
+[    3.125916] i2c-core: driver [LTR501] using legacy suspend method
+[    3.132137] i2c-core: driver [LTR501] using legacy resume method
+[    3.138387] mmc driver version: 1.07, 2014-06-30: eMMC add hw reset function
+[    3.146487] host->base fe108e00
+[    3.149692] pdata->caps 80000546
+[    3.152766] pdata->caps2 21
+[    3.155839] get property:                     port, value:0x00000005
+[    3.161586] get property:                ocr_avail, value:0x00200080
+[    3.168076] get property:                    f_min, value:0x000493e0
+[    3.174543] get property:                    f_max, value:0x05f5e100
+[    3.180994] get property:             max_req_size, value:0x00020000
+[    3.187489] get property:                  pinname, str:emmc
+[    3.193260] get property:                card_type, value:0x00000001
+[    3.199778] get property:                gpio_dat3, str:BOOT_3
+[    3.205756] [is_emmc_exist] host->storage_flag=0, POR_BOOT_VALUE=1
+[    3.256423] hub 1-1:1.0: USB hub found
+[    3.259812] hub 1-1:1.0: 4 ports detected
+[    3.264383] emmc: mmc_rescan_try_freq: trying to init card at 400000 Hz
+[    3.268744] aml_emmc_hw_reset 1379
+[    3.272641] Indeed it is in host mode hprt0 = 00021501
+[    3.354357] [aml_sdhc_probe] aml_sdhc_probe() success!
+[    3.358281] host->base fe108c20
+[    3.361499] pdata->caps 107
+[    3.364706] pdata->caps2 0
+[    3.367866] get property:                     port, value:0x00000001
+[    3.372791] get property:                ocr_avail, value:0x00200000
+[    3.379286] get property:                    f_min, value:0x000493e0
+[    3.385780] get property:                    f_max, value:0x02faf080
+[    3.392245] get property:                  f_max_w, value:0x02faf080
+[    3.398731] get property:             max_req_size, value:0x00020000
+[    3.405224] get property:                   irq_in, value:0x00000003
+[    3.411688] get property:                  irq_out, value:0x00000005
+[    3.418208] get property:                  gpio_cd, str:CARD_6
+[    3.424176] get property:                  pinname, str:sd
+[    3.427271] emmc: BKOPS_EN bit is not set
+[    3.427273] ###check hw reset function is already enabled here
+[    3.439933] get property:                card_type, value:0x00000005
+[    3.446474] get property:                gpio_dat3, str:CARD_4
+[    3.452418] get property:               gpio_volsw, str:GPIOAO_3
+[    3.453428] [aml_sd_voltage_switch][0;40;32m switch to 1.8V for a non-uhs device.
+               [0m
+[    3.453428] emmc: new HS200 MMC card at address 0001, clock 38636363, 8-bit-bus-width
+[    3.453858] mmcblk0: emmc:0001 AJNB4R 14.5 GiB 
+[    3.454415] usb 2-1: new full-speed USB device number 2 using dwc_otg
+[    3.454557] Indeed it is in host mode hprt0 = 00021501
+[    3.464392]  mmcblk0: p1 p2
+[    3.534383] sd: mmc_rescan_try_freq: trying to init card at 400000 Hz
+[    3.594350] [aml_sdio_probe] aml_sdio_probe() success!
+[    3.597918] [dsp]DSP start addr 0xc5e00000
+[    3.601681] [dsp]register dsp to char divece(257)
+[    3.607517] aml_rtc rtc.1: rtc core: registered aml_rtc as rtc0
+[    3.614034] amlogic rfkill init
+[    3.617594] Bluetooth: btwake_control_init Driver Ver 1.1
+[    3.621893] aml_hw_crypto initialization.
+[    3.627004] enter aml_i2s_dai_probe
+[    3.627015] i2s get no clk src setting in dts, use the default mpll 0
+[    3.632352] enter aml_pcm_dai_probe
+[    3.632571] enter spdif_dit_probe 
+[    3.636104] aml_spdif_unmute 
+[    3.640571] aml-i2s 0:playback preallocate_dma_buffer: area=f04fc000, addr=3c840000, size=65536
+[    3.648194] aml-i2s 1:capture preallocate_dma_buffer: area=f050e000, addr=3c860000, size=65536
+[    3.656661] aml_snd_m8 aml_m8_sound_card.4:  dit-hifi <-> aml-spdif-dai.0 mapping ok
+[    3.665378] GACT probability NOT on
+[    3.669048] Mirror/redirect action on
+[    3.673396] NET: Registered protocol family 10
+[    3.677995] mip6: Mobile IPv6
+[    3.681630] sit: IPv6 over IPv4 tunneling driver
+[    3.686218] NET: Registered protocol family 17
+[    3.689903] NET: Registered protocol family 15
+[    3.693593] Bridge firewalling registered
+[    3.697831] Bluetooth: RFCOMM TTY layer initialized
+[    3.702714] Bluetooth: RFCOMM socket layer initialized
+[    3.707985] Bluetooth: RFCOMM ver 1.11
+[    3.711836] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+[    3.717304] Bluetooth: BNEP filters: protocol multicast
+[    3.722679] Bluetooth: BNEP socket layer initialized
+[    3.727766] Bluetooth: HIDP (Human Interface Emulation) ver 1.2
+[    3.733814] Bluetooth: HIDP socket layer initialized
+[    3.738962] NET: Registered protocol family 35
+[    3.744129] VFP support v0.3: implementor 41 architecture 2 part 30 variant 5 rev 1
+[    3.751335] Registering SWP/SWPB emulation handler
+[    3.756451] pm-meson: probe of aml_pm_m8 failed with error -1
+[    3.762640] registered taskstats version 1
+[    3.766542] regulator-dummy: disabling
+[    3.770519] Mali DRM initialize, driver name: mali_drm, version 2.1
+[    3.777039] [drm] Initialized mali_drm 2.1.1 20140306 on minor 0
+[    3.782941] Mali DRM initialize, driver name: mali_drm, version 2.1
+[    3.789589] [drm] Initialized mali_drm 2.1.1 20140306 on minor 1
+[    3.796148] aml_rtc rtc.1: setting system clock to 2019-08-11 05:39:26 UTC (1565501966)
+[    3.803774] ### dt-test ### No testcase data in device tree; not running tests
+[    3.811280] meson_cpufreq_probe:SYSPLL request to be fixed
+[    3.816833] meson_cpufreq: no voltage_control prop
+[    3.821748] voltage_control = 0
+[    3.826418] <<-GTP-INFO->> GTP driver installing...
+[    3.829649] buf[0]=f2,buf[1]=af,err=4
+[    3.833060] adc=383,TS_C=18,flag=1
+[    3.836593] efuse_flag=a
+[    3.839544] amlogic_thermal_probe, this chip is trimmed, use thermal
+[    3.845799] amlogic-thermal aml_thermal: amlogic thermal probe start
+[    3.852272] #thermal-cells=7
+[    3.855278] pdata->temp_trip_count=4
+[    3.858984] temperature=70 on trip point=0
+[    3.863215] fixing high_freq=1488001 to 1488000 at trip point 0,level=4
+[    3.869980] fixing low_freq=1488001 to 1488000 at trip point 0,level=4
+[    3.876671] gpu[0].gpu_high_freq=511,tmp_level[0].gpu_high_freq=511
+[    3.883137] cpu[0] core num==3
+[    3.886334] gpu[0] core num==2
+[    3.889520] temperature=80 on trip point=1
+[    3.893779] fixing high_freq=1200001 to 1200000 at trip point 1,level=7
+[    3.900558] fixing low_freq=1200001 to 1200000 at trip point 1,level=7
+[    3.907265] gpu[1].gpu_high_freq=435,tmp_level[1].gpu_high_freq=435
+[    3.913719] cpu[1] core num==2
+[    3.916929] gpu[1] core num==2
+[    3.920116] temperature=90 on trip point=2
+[    3.924382] fixing high_freq=800001 to 696000 at trip point 2,level=12
+[    3.931055] fixing low_freq=800001 to 696000 at trip point 2,level=12
+[    3.937651] gpu[2].gpu_high_freq=328,tmp_level[2].gpu_high_freq=328
+[    3.944086] cpu[2] core num==1
+[    3.947272] gpu[2] core num==1
+[    3.950442] temperature=110 on trip point=3
+[    3.954798] fixing high_freq=-1 to -22 at trip point 3,level=-1
+[    3.960820] fixing low_freq=-1 to -22 at trip point 3,level=-1
+[    3.966792] gpu[3].gpu_high_freq=-1,tmp_level[3].gpu_high_freq=-1
+[    3.973040] cpu[3] core num==-1
+[    3.976299] gpu[3] core num==-1
+[    3.979540] idle interval=1000
+[    3.982715] pdata->name:aml_thermal
+[    3.986549] tmp_trip[0].cpu_core_upper=1
+[    3.990416] tmp_trip[1].cpu_core_upper=2
+[    3.994456] tmp_trip[2].cpu_core_upper=3
+[    3.998482] tmp_trip[3].cpu_core_upper=-1
+[    4.002616] aml_thermal bind thermal-cpucore-0 okay !
+[    4.007859] aml_thermal bind thermal-cpufreq-0 okay !
+[    4.012980] pdata->tmp_trip[0].gpu_lower_level=1
+[    4.017744] pdata->tmp_trip[0].gpu_upper_level=1
+[    4.022474] pdata->tmp_trip[1].gpu_lower_level=2
+[    4.027204] pdata->tmp_trip[1].gpu_upper_level=2
+[    4.031925] pdata->tmp_trip[2].gpu_lower_level=4
+[    4.036679] pdata->tmp_trip[2].gpu_upper_level=4
+[    4.041386] pdata->tmp_trip[3].gpu_lower_level=-1
+[    4.046194] pdata->tmp_trip[3].gpu_upper_level=-1
+[    4.050988] aml_thermal bind thermal-gpufreq-0 okay !
+[    4.056296] amlogic: Kernel Thermal management registered
+[    4.061717] amlogic-thermal aml_thermal: amlogic thermal probe done
+[    4.068222] hdmitx: cec: CEC init
+[    4.071678] hdmitx: cec: CEC task process
+[    4.071803] input: cec_input as /devices/virtual/input/input0
+[    4.071980] hdmitx: cec: hdmitx_device->cec_init_ready:0x1
+[    4.071981] ALSA device list:
+[    4.071985]   #0: ODROID-HDMI
+[    4.124552] Freeing unused kernel memory: 224K (c0935000 - c096d000)
+[    4.985767] tvmode set to 800x480p60hz
+               
+[    4.995935] don't set the same mode as current.
+[    5.027082] tvmode set to 800x480p60hz
+               
+[    5.030698] don't set the same mode as current.
+[    5.258104] force enable DISCARD here for ext4 fs
+[    5.262411] checked enable EXT4 DISCARD here
+[    5.264432] EXT4-fs (mmcblk0p2): mounted filesystem without journal. Opts: (null)
+[    5.633177] systemd[1]: systemd 229 running in system mode. (+PAM +AUDIT +SELINUX +IMA +APPARMOR +SMACK +SYSVINIT +UTMP +LIBCRYPTSETUP +GCRYPT +GNUTLS +ACL +XZ -LZ4 +SECCOMP +BLKID +ELFUTILS +KMOD -IDN)
+[    5.651757] systemd[1]: Detected architecture arm.
+[    5.684969] systemd[1]: Set hostname to <odroid>.
+[    6.110966] systemd[1]: Started Trigger resolvconf update for networkd DNS.
+[    6.134496] systemd[1]: Reached target Swap.
+[    6.154637] systemd[1]: Listening on Syslog Socket.
+[    6.174644] systemd[1]: Listening on udev Control Socket.
+[    6.194646] systemd[1]: Started Forward Password Requests to Wall Directory Watch.
+[    6.215244] systemd[1]: Set up automount Arbitrary Executable File Formats File System Automount Point.
+[    6.244619] systemd[1]: Listening on Journal Socket (/dev/log).
+[    6.264652] systemd[1]: Listening on Journal Socket.
+[    6.284538] systemd[1]: Reached target Encrypted Volumes.
+[    6.304556] systemd[1]: Listening on udev Kernel Socket.
+[    6.324846] systemd[1]: Created slice User and Session Slice.
+[    6.344584] systemd[1]: Listening on fsck to fsckd communication Socket.
+[    6.364592] systemd[1]: Listening on /dev/initctl Compatibility Named Pipe.
+[    6.384796] systemd[1]: Created slice System Slice.
+[    6.404518] systemd[1]: Reached target Slices.
+[    6.427698] systemd[1]: Started Read required files in advance.
+[    6.449270] systemd[1]: Starting Load Kernel Modules...
+[    6.467032] systemd[1]: Mounting POSIX Message Queue File System...
+[    6.486490] systemd[1]: Starting Remount Root and Kernel File Systems...
+[    6.488020] spicc spicc: device_id = 0 
+[    6.488085] spicc spicc: pinctrl_name = default
+[    6.488090] spicc spicc: num_chipselect = 8
+[    6.488101] spicc spicc: cs_gpios[0] = GPIOX_20(117)
+[    6.488109] spicc spicc: cs_gpios[1] = GPIOX_21(118)
+[    6.488116] spicc spicc: cs_gpios[2] = GPIOX_6(103)
+[    6.488123] spicc spicc: cs_gpios[3] = GPIOX_5(102)
+[    6.488129] spicc spicc: cs_gpios[4] = GPIOX_4(101)
+[    6.488137] spicc spicc: cs_gpios[5] = GPIOY_8(88)
+[    6.488144] spicc spicc: cs_gpios[6] = GPIOX_11(108)
+[    6.488151] spicc spicc: cs_gpios[7] = GPIOX_0(97)
+[    6.488163] spicc spicc: regs = fe108d80
+[    6.547419] spicc spicc: master is unqueued, this is deprecated
+[    6.573477] EXT4-fs (mmcblk0p2): re-mounted. Opts: errors=remount-ro
+[    6.580730] CAN device driver interface
+[    6.593751] spi spi0.0: spicc_setup : spi->bits_per_word = 8, spi->max_spped_hz = 10000000, spi->chip_select = 0, spi->mode = 0x00
+[    6.604479] !!!!!!!!!!!!!!!!!!!! oscillator_f = 16000000
+[    6.618343] mcp251x spi0.0: probed
+[    6.626600] systemd[1]: Starting Create list of required static device nodes for the current kernel...
+[    6.628653] !!!!!!!!!!!!!!!!!!!! oscillator_f = 16000000
+[    6.639216] mcp251x spi0.3: probed
+[    6.648672] !!!!!!!!!!!!!!!!!!!! oscillator_f = 16000000
+[    6.661617] mcp251x spi0.4: probed
+[    6.667878] !!!!!!!!!!!!!!!!!!!! oscillator_f = 16000000
+[    6.684897] systemd[1]: Created slice system-serial\x2dgetty.slice.
+[    6.706424] systemd[1]: Starting Set console keymap...
+[    6.726556] systemd[1]: Mounting RPC Pipe File System...
+[    6.744772] systemd[1]: Reached target User and Group Name Lookups.
+[    6.766816] systemd[1]: Mounting Debug File System...
+[    6.786281] systemd[1]: Starting Nameserver information manager...
+[    6.806744] systemd[1]: Starting Uncomplicated firewall...
+[    6.826597] systemd[1]: Starting Journal Service...
+[    6.850086] systemd[1]: Mounted Debug File System.
+[    6.864621] systemd[1]: Mounted POSIX Message Queue File System.
+[    6.884946] systemd[1]: ureadahead.service: Main process exited, code=exited, status=5/NOTINSTALLED
+[    6.894139] systemd[1]: ureadahead.service: Unit entered failed state.
+[    6.897751] systemd[1]: ureadahead.service: Failed with result 'exit-code'.
+[    6.900928] RPC: Registered named UNIX socket transport module.
+[    6.900931] RPC: Registered udp transport module.
+[    6.900932] RPC: Registered tcp transport module.
+[    6.900934] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    6.929117] systemd[1]: Started Remount Root and Kernel File Systems.
+[    6.955362] systemd[1]: Started Create list of required static device nodes for the current kernel.
+[    6.985325] systemd[1]: Started Set console keymap.
+[    7.005119] systemd[1]: Mounted RPC Pipe File System.
+[    7.028248] systemd[1]: Started Uncomplicated firewall.
+[    7.046595] systemd[1]: Started Nameserver information manager.
+[    7.070800] systemd[1]: Started Journal Service.
+[    7.407506] systemd-journald[213]: Received request to flush runtime journal from PID 1
+[    7.674374] mcp251x spi0.5: MCP251x didn't enter in conf mode after reset
+[    7.684006] !!!!!!!!!!!!!!!!!!!! oscillator_f = 16000000
+[    8.387453] input: RPI_TOUCH By ZH851 as /devices/lm0/usb2/2-1/2-1:1.0/input/input1
+[    8.394710] dwav_usb_mt 2-1:1.0: ODROID VU5 MultiTouch(800x480)
+[    8.398643] usbcore: registered new interface driver dwav_usb_mt
+[    8.696499] mcp251x spi0.6: MCP251x didn't enter in conf mode after reset
+[    8.713891] !!!!!!!!!!!!!!!!!!!! oscillator_f = 16000000
+[    8.737660] mcp251x spi0.7: probed
+[    8.771916] spi spi0.2: spicc_setup : spi->bits_per_word = 8, spi->max_spped_hz = 2000000, spi->chip_select = 2, spi->mode = 0x00
+[    8.842136] spi spi0.1: spicc_setup : spi->bits_per_word = 8, spi->max_spped_hz = 1000000, spi->chip_select = 1, spi->mode = 0x00
+[    8.855803] spicc_cs is using the pin GPIOY_8
+[    8.858625] ads7846 spi0.1: failed to request/setup pendown GPIO88: -16
+[    8.866329] ads7846: probe of spi0.1 failed with error -16
+[    8.871304] spicc spicc: SPICC init ok 
+[    8.875871] gpiomem-meson c1108000.gpiomem: Initialised: Registers at 0xc1108000
+[    9.340263] ionvideo open
+[    9.340611] ionvideo_stop_generating!!!!
+[    9.340634] ionvideo release
+[    9.535431] sd: mmc_rescan_try_freq: trying to init card at 300000 Hz
+[    9.634607] FAT-fs (mmcblk0p1): Volume was not properly unmounted. Some data may be corrupt. Please run fsck.
+[   10.074154] type=1400 audit(1565501972.760:2): apparmor="STATUS" operation="profile_load" name="/usr/bin/ubuntu-core-launcher" pid=570 comm="apparmor_parser"
+[   10.083077] type=1400 audit(1565501972.770:3): apparmor="STATUS" operation="profile_load" name="/usr/lib/snapd/snap-confine" pid=571 comm="apparmor_parser"
+[   10.084016] type=1400 audit(1565501972.770:4): apparmor="STATUS" operation="profile_load" name="/usr/lib/snapd/snap-confine//mount-namespace-capture-helper" pid=571 comm="apparmor_parser"
+[   10.089138] type=1400 audit(1565501972.780:5): apparmor="STATUS" operation="profile_load" name="/usr/sbin/cups-browsed" pid=573 comm="apparmor_parser"
+[   10.091740] type=1400 audit(1565501972.780:6): apparmor="STATUS" operation="profile_load" name="/sbin/dhclient" pid=568 comm="apparmor_parser"
+[   10.092327] type=1400 audit(1565501972.780:7): apparmor="STATUS" operation="profile_load" name="/usr/lib/NetworkManager/nm-dhcp-client.action" pid=568 comm="apparmor_parser"
+[   10.092913] type=1400 audit(1565501972.780:8): apparmor="STATUS" operation="profile_load" name="/usr/lib/NetworkManager/nm-dhcp-helper" pid=568 comm="apparmor_parser"
+[   10.093461] type=1400 audit(1565501972.780:9): apparmor="STATUS" operation="profile_load" name="/usr/lib/connman/scripts/dhclient-script" pid=568 comm="apparmor_parser"
+[   10.100855] type=1400 audit(1565501972.790:10): apparmor="STATUS" operation="profile_load" name="/usr/lib/lightdm/lightdm-guest-session" pid=567 comm="apparmor_parser"
+[   10.101447] type=1400 audit(1565501972.790:11): apparmor="STATUS" operation="profile_load" name="/usr/lib/lightdm/lightdm-guest-session//chromium" pid=567 comm="apparmor_parser"
+[    9.336762] amlvideo openamlvideo close
+[   10.195783] mcp251x spi0.3 can1: bitrate error 0.0%
+[   10.222434] mcp251x spi0.7 can3: bitrate error 0.0%
+[   10.239977]  reg:2620,clearmask=20002,setmask=10001
+[   10.239995] reg:2621,clearmask=ff00,set pin=87
+[   10.240007] reg:2623,clearmask=70,setmask=0
+[   10.250533] mcp251x spi0.3: CNF: 0x0d 0xc8 0x01
+[   10.261367] ERROR(meson_fix_irqbank):already allocation irq bank(1)!!
+[   10.265433] meson_fix_irqbank : new allocation irq bank(0)!!
+[   10.271088]  reg:2620,clearmask=10001,setmask=10001
+[   10.271105] reg:2621,clearmask=ff,set pin=98
+[   10.271117] reg:2623,clearmask=7,setmask=0
+[   10.281915] mcp251x spi0.7: CNF: 0x0d 0xc8 0x01
+[   10.285352] ERROR(meson_fix_irqbank):already allocation irq bank(1)!!
+[   10.289569] meson_fix_irqbank : new allocation irq bank(2)!!
+[   10.295102]  reg:2620,clearmask=40004,setmask=10001
+[   10.295113] reg:2621,clearmask=ff0000,set pin=116
+[   10.295119] reg:2623,clearmask=700,setmask=0
+[   10.308164] mcp251x spi0.4: CNF: 0x0e 0xf5 0x01
+[   10.510286] mcp251x spi0.0 can0: bitrate error 0.0%
+[   10.546136] ERROR(meson_fix_irqbank):already allocation irq bank(1)!!
+[   10.550168] meson_fix_irqbank : new allocation irq bank(3)!!
+[   10.555854]  reg:2620,clearmask=80008,setmask=10001
+[   10.555864] reg:2621,clearmask=ff000000,set pin=104
+[   10.555870] reg:2623,clearmask=7000,setmask=0
+[   10.566287] mcp251x spi0.0: CNF: 0x0d 0xc8 0x01
+[   12.549337] can: controller area network core (rev 20120528 abi 9)
+[   12.550654] NET: Registered protocol family 29
+[   12.566667] can: raw protocol (rev 20120528)
+[   13.018252] netdev_open
+[   13.018263] Ethernet reset
+[   13.018288] NET MDA descpter start addr=eb100000
+[   13.082207] phy_interface = 0
+[   13.082219] aml_phy_init:  trying to attach to 0:01
+[   13.082387] am_rtl811f called phy reset
+[   13.094473] --1--write mac add to:c521d248: 00 1e 06 11 40 53 |..@S|
+[   13.094496] --2--write mac add to:c521d248: 00 1e 06 11 40 53 |..@S|
+[   13.094511] write mac add to:c521d248: 00 1e 06 11 40 53 |..@S|
+[   13.094528] Current DMA mode=0, set mode=621c100
+[   13.094556] eth0: opened (irq 40).
+[   13.104717] ether leave promiscuous mode
+[   13.104733] ether leave all muticast mode
+[   13.104895] IPv6: ADDRCONF(NETDEV_UP): eth0: link is not ready
+[   14.188804] create_disp_get_ump_secure_id******0
+[   14.189398] create_disp_get_ump_secure_id******1
+[   16.094451] [adjust link] -> eth: full-duplex
+[   16.094463] [adjust link] -> eth: phy_speed <> priv_speed)
+[   16.094468] [adjust link] -> eth: switching to RGMII 100
+[   16.094482] [adjust link -> eth: am_adjust_link state change (new_state=true)
+[   16.094488] libphy: 0:01 - Link is Up - 100/Full
+[   16.094534] IPv6: ADDRCONF(NETDEV_CHANGE): eth0: link becomes ready
+[   17.464940] gpiomem-meson c1108000.gpiomem: gpiomem device opened.

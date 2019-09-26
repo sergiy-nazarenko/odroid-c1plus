@@ -1,0 +1,4 @@
+[    9.989600] ERROR(meson_fix_irqbank):already allocation irq bank(1)!!
+[    9.993513] meson_fix_irqbank : new allocation irq bank(2)!!
+[    9.999347]  reg:2620,clearmask=40004,setmask=10001
+[    9.999357] reg:2621,clearmask=ff0000,set pin=116

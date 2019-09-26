@@ -581,39 +581,89 @@
         pinctrl-names="default";
         pinctrl-0=<&aml_spicc_pins>;
         device_id = <0>;
-        num_chipselect = <5>;
-        cs_gpios = "GPIOX_20", "GPIOX_21", "GPIOX_6", "GPIOX_5", "GPIOX_4";/**/
-  /**/
+        num_chipselect = <8>;
+        cs_gpios = "GPIOX_20", "GPIOX_21", "GPIOX_6", "GPIOX_5", "GPIOX_4","GPIOY_8","GPIOX_11","GPIOX_0";/**/
      
        can0: mcp2515@0 {
             compatible = "microchip,mcp2515";
             reg = <0>;
-            clocks = <&mcp2515_clk>;
+            clocks = <&mcp2515_0clk>;
             spi-max-frequency = <10000000>;
+            clk-osc = <8>;
             irq-falling = <1>;
+            bit-timing = < 0x09 0xBE 0x07 >
             irq-gpio = "GPIOX_7";
-            mcp2515_clk: oscillator {
-                #clock-cells = <0>;
-                compatible = "fixed-clock";
-                clock-frequency = <16000000>;
-            };
+            oscillator_frequency =  <16000000>;
         };
        
        can1: mcp2515@1 {
             compatible = "microchip,mcp2515";
             reg = <3>;
-            clocks = <&mcp2515_clk>;
+            clocks = <&mcp2515_1clk>;
             spi-max-frequency = <10000000>;
             irq-falling = <1>;
             irq-gpio = "GPIOY_7";
+            mcp2515_1clk: oscillator {
+                #clock-cells = <0>;
+                compatible = "fixed-clock";
+                clock-frequency = <16000000>;
+            };
        };
        can2: mcp2515@2 {
             compatible = "microchip,mcp2515";
             reg = <4>;
-            clocks = <&mcp2515_clk>;
+            irq-filter = <6>;   /* 258.741us Delay */
+            clocks = <&mcp2515_2clk>;
             spi-max-frequency = <10000000>;
             irq-falling = <1>;
             irq-gpio = "GPIOX_19";
+            mcp2515_2clk: oscillator {
+                #clock-cells = <0>;
+                compatible = "fixed-clock";
+                clock-frequency = <16000000>;
+            };
+       };
+       can3: mcp2515@3 {
+            compatible = "microchip,mcp2515";
+            reg = <5>;
+            irq-filter = <6>;   /* 258.741us Delay */
+            mcp251x-clock = <&mcp2515_3clk>;
+            spi-max-frequency = <10000000>;
+            irq-falling = <1>;
+            irq-gpio = "GPIOX_2";
+            mcp2515_3clk: oscillator {
+                #clock-cells = <0>;
+                compatible = "fixed-clock";
+                clock-frequency = <16000000>;
+            };
+        };
+       can4: mcp2515@4 {
+            compatible = "microchip,mcp2515";
+            reg = <6>;
+            irq-filter = <6>;   /* 258.741us Delay */
+            clocks = <&mcp2515_4clk>;
+            spi-max-frequency = <10000000>;
+            irq-falling = <1>;
+            irq-gpio = "GPIOY_3";
+            mcp2515_4clk: oscillator {
+                #clock-cells = <0>;
+                compatible = "fixed-clock";
+                clock-frequency = <16000000>;
+            };
+        };
+       can5: mcp2515@5 {
+            compatible = "microchip,mcp2515";
+            reg = <7>;
+            irq-filter = <6>;   /* 258.741us Delay */
+            clocks = <&mcp2515_5clk>;
+            spi-max-frequency = <10000000>;
+            irq-falling = <1>;
+            irq-gpio = "GPIOX_1";
+            mcp2515_5clk: oscillator {
+                #clock-cells = <0>;
+                compatible = "fixed-clock";
+                clock-frequency = <16000000>;
+            };
         };
 	/**/
         spidev@2 {
