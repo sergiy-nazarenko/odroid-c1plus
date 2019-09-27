@@ -22,6 +22,7 @@ void usage(const char * s) {
     printf("Usage: %s <drain>\n", s);
 }
 
+void myInterrupt0 (void) { ++globalCounter [0] ; }
 
 int main (int argc, char ** argv) 
 {
@@ -37,10 +38,10 @@ int main (int argc, char ** argv)
             mode = CAN_DRAIN;
     }
 
-//printf("\033[H\033[J");
-//printf("\e[2J\e[H"); 
-printf("%s%s", CLR_SCREEN, CSR_HOME);
-printf("%s", CSR_HOME);
+    //printf("\033[H\033[J");
+    //printf("\e[2J\e[H"); 
+    printf("%s%s", CLR_SCREEN, CSR_HOME);
+    printf("%s", CSR_HOME);
     std::vector<int> data_can;
     data_can.reserve(CAN_MEM_ARR_SIZE);
     data_can.assign(CAN_MEM_ARR_SIZE, -1);
@@ -94,46 +95,84 @@ printf("%s", CSR_HOME);
         bind(s, (struct sockaddr *)&addr, sizeof(addr));
 
         int n = 0;
+
+        wiringPiISR (0, INT_EDGE_FALLING, &myInterrupt0) ;
+
+
         while( (n = read(s, &frame, sizeof(frame)) > 0))
         {
-
             switch (frame.can_id)
             {
-              case 0x450:
-              { if (frame.data[3]==0x47)
-                {
-                    data_can[0] = 0; 
+                case 0x450:
+                { 
+                    if (frame.data[3]==0x47)
+                    {
+                        data_can[0] = 0; 
+                    }
+                    else
+                    {
+                        data_can[0] = 1;
+                    }
+                    break;
                 }
-                else
-                {
-                   data_can[0] = 1;
+                case 0x510:
+                { 
+                    //printf("\033[%d;%dHcoolant: %d   ", 10,40,col);
+                    data_can[1] = frame.data[1]-40;;
+                    break;            
                 }
-                break;
-              }
-              case 0x510:
-              { int col = frame.data[1]-40;
-                //printf("\033[%d;%dHcoolant: %d   ", 10,40,col);
-                data_can[1] = col;
-                break;            
-              }
-              case 0x110:
-              { int rpm = (frame.data[1] * 256 + frame.data[2])/4;
-                //printf("\033[%d;%dHrpm: %d   ",10,80, rpm);
-                data_can[2] = rpm;
-                break;            
-              }
-              case 0x128:
-              { int rp = (256*frame.data[0] + frame.data[1])/100;
-                //printf("\033[%d;%dHfuel:     %d    ",10,80, rp);                
-                data_can[3] = rp;
-                break;
-              }
+                case 0x110:
+                { 
+                    //printf("\033[%d;%dHrpm: %d   ",10,80, rpm);
+                    data_can[2] = (frame.data[1] * 256 + frame.data[2])/4;
+                    break;            
+                }
+                case 0x128:
+                { 
+                    //printf("\033[%d;%dHfuel:     %d    ",10,80, rp);                
+                    data_can[3] = (256*frame.data[0] + frame.data[1])/100;
+                    break;
+                }
+                case 0x350:
+                {
+                    if ( (frame.data[0] >> 2) & 1 )
+                        data_can[4] |= (1<<0);
+                    else
+                        data_can[4] &=~ (1<<0);
+                    break;
+                }
+                case 0x260:
+                {
+                    data_can[4] &=~ (1<<1);
+                    data_can[4] &=~ (1<<2);
+                    data_can[4] &=~ (1<<3);
+                    if ( frame.data[0] == 0b00100101 )
+                        data_can[4] |= (1<<1);
+                    if ( frame.data[0] == 0b00111010 )
+                        data_can[4] |= (1<<2);
+                    if ( frame.data[0] == 0b00011111 )
+                        data_can[4] |= (1<<3);
+                    break;
+                }
+                default:
+                    break;
             }
-
             
             arr_write_can(data_can);
 
             usleep(100);
+
+
+            // if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+            //     perror("bind");
+            //     return 1;
+            // }
+
+            // if (write(s, &frame, required_mtu) != required_mtu) {
+            //     perror("write");
+            //     return 1;
+            // }
+
         }
 
 
