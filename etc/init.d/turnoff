@@ -1,0 +1,38 @@
+#! /bin/sh
+# https://unix.stackexchange.com/questions/320874/startup-script-to-run-a-shell-script-as-daemon
+### BEGIN INIT INFO
+# Provides:          foobar
+# Required-Start:    $local_fs $network
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: foobar
+# Description:       more foo for your bars
+### END INIT INFO
+
+# Carry out specific functions when asked to by the system
+case "$1" in
+  start)
+    echo "Starting turnoff"
+
+    # example 1 - system service
+    # /usr/bin/foobar --config /etc/foo.conf start
+
+    # example 2 - run script as user
+    # su --login mkaz --command "/home/mkaz/bin/my-script --cmd-args"
+
+    ;;
+  stop)
+    echo "Stopping turnoff"
+
+    # example 1
+    # /usr/bin/foobar --config /etc/foo.conf stop
+
+    ;;
+  *)
+    echo "Usage: /etc/init.d/turnoff {start|stop}"
+    exit 1
+    ;;
+esac
+
+exit 0

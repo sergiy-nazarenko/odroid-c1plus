@@ -588,6 +588,7 @@
             compatible = "microchip,mcp2515";
             reg = <0>;
             spi-max-frequency = <10000000>;
+            clk-osc = <8>;
             irq-falling = <1>;
             irq-filter = <4>;   
             irq-gpio = "GPIOX_7";
