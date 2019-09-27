@@ -15,7 +15,8 @@
 
 #define CAN_HELP 1
 #define CAN_DRAIN  2
-
+#define CSR_HOME "\33[H"
+#define CLR_SCREEN "\33[2J"
 
 void usage(const char * s) {
     printf("Usage: %s <drain>\n", s);
@@ -36,8 +37,10 @@ int main (int argc, char ** argv)
             mode = CAN_DRAIN;
     }
 
-
-
+//printf("\033[H\033[J");
+//printf("\e[2J\e[H"); 
+printf("%s%s", CLR_SCREEN, CSR_HOME);
+printf("%s", CSR_HOME);
     std::vector<int> data_can;
     data_can.reserve(CAN_MEM_ARR_SIZE);
     data_can.assign(CAN_MEM_ARR_SIZE, -1);
@@ -79,7 +82,8 @@ int main (int argc, char ** argv)
         /* open CAN_RAW socket */
         s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
 
-        /* convert interface sting "can0" into interface index */ strcpy(ifr.ifr_name, "vcan0");
+        /* convert interface sting "can0" into interface index */ 
+        strcpy(ifr.ifr_name, "can0");
         ioctl(s, SIOCGIFINDEX, &ifr);
 
         /* setup address for bind */
@@ -93,19 +97,43 @@ int main (int argc, char ** argv)
         while( (n = read(s, &frame, sizeof(frame)) > 0))
         {
 
-            if (frame.can_id == 0x450){
-              if (frame.data[3]==0x47){
+            switch (frame.can_id)
+            {
+              case 0x450:
+              { if (frame.data[3]==0x47)
+                {
                     data_can[0] = 0; 
                 }
                 else
                 {
                    data_can[0] = 1;
                 }
+                break;
+              }
+              case 0x510:
+              { int col = frame.data[1]-40;
+                //printf("\033[%d;%dHcoolant: %d   ", 10,40,col);
+                data_can[1] = col;
+                break;            
+              }
+              case 0x110:
+              { int rpm = (frame.data[1] * 256 + frame.data[2])/4;
+                //printf("\033[%d;%dHrpm: %d   ",10,80, rpm);
+                data_can[2] = rpm;
+                break;            
+              }
+              case 0x128:
+              { int rp = (256*frame.data[0] + frame.data[1])/100;
+                //printf("\033[%d;%dHfuel:     %d    ",10,80, rp);                
+                data_can[3] = rp;
+                break;
+              }
             }
+
             
             arr_write_can(data_can);
 
-            usleep(2000);
+            usleep(100);
         }
 
 
